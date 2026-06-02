@@ -32,6 +32,10 @@
                     <span class="stat-label">Plan actuel</span>
                 </div>
                 <div class="stat">
+                    <span class="stat-value">{{ plans[user.plan].quality }}p</span>
+                    <span class="stat-label">Qualité</span>
+                </div>
+                <div class="stat">
                     <span class="stat-value">{{ plans[user.plan].max_duration }}s</span>
                     <span class="stat-label">Durée max</span>
                 </div>
@@ -45,7 +49,11 @@
 
             {% if user.plan == 'free' %}
             <div class="upgrade-banner">
+                {% if user.credits <= 0 %}
+                🚫 <strong>Plus de crédits !</strong> — <a href="/pricing">Passez à un plan supérieur</a>
+                {% else %}
                 💡 Plus que {{ user.credits }} crédit(s) — <a href="/pricing">Passez à un plan supérieur</a>
+                {% endif %}
             </div>
             {% endif %}
 

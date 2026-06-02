@@ -12,6 +12,7 @@ import tempfile
 import shutil
 from pathlib import Path
 from datetime import datetime, timedelta
+from types import MappingProxyType
 from typing import Optional
 
 import aiofiles
@@ -24,6 +25,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship
 import stripe
+
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -44,14 +47,22 @@ stripe.api_key = STRIPE_SK
 
 # Crédits par abonnement
 PLANS = {
-    "free": {"name": "Gratuit", "price": 0, "credits": 3, "max_duration": 60},
-    "basic": {"name": "Basic", "price": 4.99, "credits": 20, "max_duration": 300, "stripe_price_id": None},
-    "pro": {"name": "Pro", "price": 14.99, "credits": 100, "max_duration": 900, "stripe_price_id": None},
-    "unlimited": {"name": "Illimité", "price": 49.99, "credits": 999999, "max_duration": 3600, "stripe_price_id": None},
+    "free":     {"name": "Gratuit",  "price": 0,     "credits": 1,      "max_duration": 60,   "quality": "480",   "stripe_price_id": None},
+    "basic":    {"name": "Basic",    "price": 4.99,  "credits": 20,     "max_duration": 300,  "quality": "720",   "stripe_price_id": None},
+    "pro":      {"name": "Pro",      "price": 14.99, "credits": 100,    "max_duration": 900,  "quality": "1080",  "stripe_price_id": None},
+    "unlimited": {"name": "Illimité", "price": 49.99, "credits": 999999, "max_duration": 3600, "quality": "4K",    "stripe_price_id": None},
 }
 
 app = FastAPI(title="YT Cut", version="1.0.0")
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+# Jinja2Templates from Starlette breaks with request in context (unhashable cache key)
+# Use a plain Jinja2 environment with caching disabled
+_jinja_env = Environment(
+    loader=FileSystemLoader(str(BASE_DIR / "templates")),
+    autoescape=select_autoescape(["html"]),
+    cache_size=0,
+)
+_jinja_env.filters["from_json"] = json.loads
+_jinja_env.globals["plans"] = PLANS
 
 # ─── DB ───────────────────────────────────────────────────────────────────────
 
@@ -65,7 +76,7 @@ class User(Base):
     email = Column(String(255), unique=True, index=True)
     password_hash = Column(String(128))
     api_key = Column(String(64), unique=True, index=True, default=lambda: secrets.token_hex(32))
-    credits = Column(Integer, default=3)
+    credits = Column(Integer, default=1)
     plan = Column(String(20), default="free")
     stripe_customer_id = Column(String(64), nullable=True)
     stripe_sub_id = Column(String(64), nullable=True)
@@ -160,8 +171,8 @@ def get_video_info(url: str) -> dict:
     except Exception as e:
         raise Exception(f"Erreur: {str(e)}")
 
-async def download_video(url: str, video_id_db: str, max_duration: int = 60) -> dict:
-    """Télécharge une vidéo YouTube."""
+async def download_video(url: str, video_id_db: str, max_duration: int = 60, quality: str = "480") -> dict:
+    """Télécharge une vidéo YouTube selon la qualité du plan."""
     out_path = VIDEOS / f"{video_id_db}.mp4"
     thumb_path = THUMBS / f"{video_id_db}.jpg"
 
@@ -172,10 +183,15 @@ async def download_video(url: str, video_id_db: str, max_duration: int = 60) -> 
     if duration > max_duration:
         raise Exception(f"Vidéo trop longue ({duration}s). Maximum: {max_duration}s pour votre plan.")
 
+    # Format selon qualité
+    # 4K = 2160p, 1080p, 720p, 480p
+    quality_map = {"480": "480", "720": "720", "1080": "1080", "4K": "2160"}
+    max_height = quality_map.get(quality, "480")
+
     # Télécharger
     cmd = [
         "yt-dlp",
-        "-f", "best[height<=1080][ext=mp4]/best[height<=1080]/best",
+        "-f", f"best[height<={max_height}][ext=mp4]/best[height<={max_height}]/best",
         "--no-playlist",
         "-o", str(out_path),
         url
@@ -218,15 +234,15 @@ def cut_video(input_path: Path, start: float, end: float, cut_id: str) -> Path:
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
-    return templates.TemplateResponse("index.html", {"request": request, "user": user, "plans": PLANS})
+    return HTMLResponse(_jinja_env.get_template("index.html").render(request=request, user=user))
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return HTMLResponse(_jinja_env.get_template("login.html").render(request=request))
 
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_page(request: Request):
-    return templates.TemplateResponse("signup.html", {"request": request})
+    return HTMLResponse(_jinja_env.get_template("signup.html").render(request=request))
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):
@@ -235,17 +251,17 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse("/login")
     videos = db.query(Video).filter(Video.user_id == user.id).order_by(Video.created_at.desc()).all()
     cuts = db.query(Cut).filter(Cut.user_id == user.id).order_by(Cut.created_at.desc()).all()
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request, "user": user, "videos": videos, "cuts": cuts,
-        "plans": PLANS, "stripe_pk": STRIPE_PK,
-    })
+    return HTMLResponse(_jinja_env.get_template("dashboard.html").render(
+        request=request, user=user, videos=videos, cuts=cuts,
+        stripe_pk=STRIPE_PK,
+    ))
 
 @app.get("/pricing", response_class=HTMLResponse)
 async def pricing(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
-    return templates.TemplateResponse("pricing.html", {
-        "request": request, "user": user, "plans": PLANS, "stripe_pk": STRIPE_PK,
-    })
+    return HTMLResponse(_jinja_env.get_template("pricing.html").render(
+        request=request, user=user, stripe_pk=STRIPE_PK,
+    ))
 
 # ─── API Auth ─────────────────────────────────────────────────────────────────
 
@@ -254,7 +270,7 @@ async def api_signup(email: str = Form(...), password: str = Form(...), db: Sess
     if db.query(User).filter(User.email == email).first():
         raise HTTPException(400, "Email déjà utilisé")
 
-    user = User(email=email, password_hash=hash_pw(password), credits=3, plan="free")
+    user = User(email=email, password_hash=hash_pw(password), credits=1, plan="free")
     db.add(user)
     db.commit()
 
@@ -329,7 +345,8 @@ async def api_download(
     db.commit()
 
     try:
-        info = await download_video(url, vid_db, max_dur)
+        quality = PLANS[user.plan]["quality"]
+        info = await download_video(url, vid_db, max_dur, quality)
         video.title = info.get("title", "Sans titre")  # will be overwritten
         video.duration = info["duration"]
         video.filename = info["filename"]
@@ -540,7 +557,7 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         user = db.query(User).filter(User.stripe_sub_id == sub["id"]).first()
         if user:
             user.plan = "free"
-            user.credits = 3
+            user.credits = 1
             user.stripe_sub_id = None
             db.commit()
 

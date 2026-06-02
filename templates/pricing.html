@@ -43,9 +43,9 @@
                         {% endif %}
                     </div>
                     <ul>
-                        <li>✅ {{ plan.credits }} crédits</li>
+                        <li>✅ 📺 {{ plan.quality }}p</li>
+                        <li>✅ {{ plan.credits }} téléchargement{% if plan.credits > 1 %}s{% endif %}</li>
                         <li>✅ Vidéos jusqu'à {{ plan.max_duration }}s</li>
-                        <li>✅ Qualité 1080p</li>
                         <li>✅ Découpage illimité</li>
                         <li>✅ Téléchargement direct</li>
                     </ul>

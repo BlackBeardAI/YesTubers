@@ -38,7 +38,7 @@
             </div>
             {% else %}
             <div class="cta-box">
-                <p>🎁 <strong>3 crédits gratuits</strong> pour commencer</p>
+                <p>🎁 <strong>1 téléchargement gratuit</strong> (480p) — inscription obligatoire</p>
                 <a href="/signup" class="btn-cta">Créer un compte gratuit</a>
             </div>
             {% endif %}
@@ -66,7 +66,7 @@
                 <div class="feature-card">
                     <div class="feature-icon">💶</div>
                     <h3>Crédits flexibles</h3>
-                    <p>3 crédits gratuits, puis des plans adaptés à vos besoins.</p>
+                    <p>1 téléchargement gratuit, puis des plans adaptés à vos besoins.</p>
                 </div>
             </div>
         </div>
@@ -88,7 +88,8 @@
                         {% endif %}
                     </div>
                     <ul>
-                        <li>{{ plan.credits }} crédits</li>
+                        <li>📺 Qualité {{ plan.quality }}p</li>
+                        <li>🎬 {{ plan.credits }} téléchargement{% if plan.credits > 1 %}s{% endif %}</li>
                         <li>Vidéos jusqu'à {{ plan.max_duration }}s</li>
                         <li>Qualité 1080p</li>
                         <li>Découpage illimité</li>
