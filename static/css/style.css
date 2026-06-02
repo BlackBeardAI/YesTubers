@@ -85,9 +85,9 @@ body {
 }
 
 .plan-free { background: #374151; color: #9ca3af; }
-.plan-basic { background: #1e3a5f; color: #60a5fa; }
-.plan-pro { background: #4c1d95; color: #c084fc; }
-.plan-unlimited { background: #7c2d12; color: #fb923c; }
+.plan-starter { background: #1e3a5f; color: #60a5fa; }
+.plan-creator { background: #4c1d95; color: #c084fc; }
+.plan-pro { background: #7c2d12; color: #fb923c; }
 
 /* ─── Buttons ─────────────────────────────── */
 .btn-primary {
@@ -305,18 +305,6 @@ body {
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
-}
-
-.price {
-    font-size: 2rem;
-    font-weight: 800;
-    margin: 16px 0;
-}
-
-.price span {
-    font-size: 1rem;
-    font-weight: 400;
-    color: var(--text-muted);
 }
 
 .pricing-card ul {
@@ -607,6 +595,102 @@ footer {
 .cta-box p { margin-bottom: 16px; font-size: 1.1rem; }
 
 /* ─── Responsive ──────────────────────────── */
+
+/* ─── Billing Toggle ──────────────────────── */
+.billing-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    max-width: 300px;
+    margin: 20px auto 32px;
+}
+
+.toggle-label {
+    flex: 1;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    position: relative;
+}
+
+.toggle-label.active {
+    background: var(--primary);
+    color: white;
+}
+
+.save-badge {
+    background: var(--success);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+/* ─── Price Display ───────────────────────── */
+.price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 16px 0 4px;
+}
+
+.price span.price-period {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.price-annual-detail,
+.price-monthly-detail {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+/* ─── Hidden utility ──────────────────────── */
+.hidden { display: none; }
+
+/* ─── Ghost button ────────────────────────── */
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+
+.btn-ghost:hover { border-color: var(--text-muted); color: var(--text); }
+
+/* ─── Current plan label ──────────────────── */
+.current-plan-label {
+    display: block;
+    padding: 14px 0;
+    text-align: center;
+    font-weight: 700;
+    color: var(--success);
+    font-size: 0.9rem;
+}
+
+/* ─── Upgrade banner variants ─────────────── */
+.upgrade-banner.subtle {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+}
+
+/* ─── Quality line ────────────────────────── */
+.quality-line {
+    font-weight: 600;
+    color: var(--text) !important;
+}
+
 @media (max-width: 768px) {
     .hero h1 { font-size: 1.8rem; }
     .download-box { flex-direction: column; }

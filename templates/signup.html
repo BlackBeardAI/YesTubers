@@ -9,11 +9,10 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo">🎬 YT Cut</a>
+            <a href="/" class="logo">YT Cut</a>
             <div class="nav-links">
                 <a href="/pricing">Tarifs</a>
                 <a href="/login">Connexion</a>
-                <a href="/signup" class="btn-primary active">Créer un compte</a>
             </div>
         </div>
     </nav>
@@ -21,7 +20,7 @@
     <section class="auth-section">
         <div class="auth-card">
             <h2>Créer un compte</h2>
-            <p class="auth-sub">🎁 <strong>1 téléchargement gratuit</strong> (480p) inclus</p>
+            <p class="auth-sub">1 téléchargement gratuit — puis à partir de <strong>1.99€</strong></p>
             <form id="signup-form">
                 <label>Email</label>
                 <input type="email" name="email" required placeholder="vous@email.com" />
@@ -43,8 +42,8 @@
             const r = await fetch('/api/auth/signup', {method:'POST', body: form});
             const data = await r.json();
             if (r.ok) { window.location.href = '/dashboard'; }
-            else { status.textContent = '❌ ' + (data.detail || 'Erreur'); }
-        } catch(err) { status.textContent = '❌ Erreur réseau'; }
+            else { status.textContent = data.detail || 'Erreur'; }
+        } catch(err) { status.textContent = 'Erreur réseau'; }
     });
     </script>
 </body>

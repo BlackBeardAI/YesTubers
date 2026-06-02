@@ -46,11 +46,32 @@ STRIPE_WEBHOOK = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 stripe.api_key = STRIPE_SK
 
 # Crédits par abonnement
+# billing: "monthly" ou "annual" — l'annuel est poussé par défaut (-33%)
 PLANS = {
-    "free":     {"name": "Gratuit",  "price": 0,     "credits": 1,      "max_duration": 60,   "quality": "480",   "stripe_price_id": None},
-    "basic":    {"name": "Basic",    "price": 4.99,  "credits": 20,     "max_duration": 300,  "quality": "720",   "stripe_price_id": None},
-    "pro":      {"name": "Pro",      "price": 14.99, "credits": 100,    "max_duration": 900,  "quality": "1080",  "stripe_price_id": None},
-    "unlimited": {"name": "Illimité", "price": 49.99, "credits": 999999, "max_duration": 3600, "quality": "4K",    "stripe_price_id": None},
+    "free": {
+        "name": "Gratuit",
+        "monthly_price": 0, "annual_price": 0,
+        "credits": 1, "max_duration": 30, "quality": "480",
+        "stripe_price_id": None, "stripe_annual_price_id": None,
+    },
+    "starter": {
+        "name": "Starter",
+        "monthly_price": 1.99, "annual_price": 19.99,
+        "credits": 10, "max_duration": 180, "quality": "720",
+        "stripe_price_id": None, "stripe_annual_price_id": None,
+    },
+    "creator": {
+        "name": "Creator",
+        "monthly_price": 6.99, "annual_price": 69.99,
+        "credits": 50, "max_duration": 600, "quality": "1080",
+        "stripe_price_id": None, "stripe_annual_price_id": None,
+    },
+    "pro": {
+        "name": "Pro",
+        "monthly_price": 19.99, "annual_price": 199.99,
+        "credits": 999999, "max_duration": 3600, "quality": "4K",
+        "stripe_price_id": None, "stripe_annual_price_id": None,
+    },
 }
 
 app = FastAPI(title="YT Cut", version="1.0.0")
@@ -234,7 +255,8 @@ def cut_video(input_path: Path, start: float, end: float, cut_id: str) -> Path:
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
-    return HTMLResponse(_jinja_env.get_template("index.html").render(request=request, user=user))
+    return HTMLResponse(_jinja_env.get_template("index.html").render(
+        request=request, user=user, stripe_pk=STRIPE_PK))
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -487,27 +509,35 @@ async def api_cut_delete(
 @app.post("/api/stripe/create-checkout")
 async def stripe_checkout(
     plan: str = Form(...),
+    billing: str = Form("annual"),  # monthly ou annual
     user: User = Depends(require_user),
     db: Session = Depends(get_db)
 ):
     if plan not in PLANS or plan == "free":
         raise HTTPException(400, "Plan invalide")
+    if billing not in ("monthly", "annual"):
+        raise HTTPException(400, "Billing invalide")
 
     plan_data = PLANS[plan]
-    if not plan_data.get("stripe_price_id"):
+    price_field = "stripe_annual_price_id" if billing == "annual" else "stripe_price_id"
+    amount = plan_data["annual_price"] if billing == "annual" else plan_data["monthly_price"]
+
+    if not plan_data.get(price_field):
         # Créer le produit/prix à la volée
+        suffix = " (Annuel -33%)" if billing == "annual" else " (Mensuel)"
         product = await asyncio.to_thread(
             stripe.Product.create,
-            name=f"YT Cut - {plan_data['name']}",
+            name=f"YT Cut - {plan_data['name']}{suffix}",
         )
+        interval = "year" if billing == "annual" else "month"
         price = await asyncio.to_thread(
             stripe.Price.create,
             product=product.id,
-            unit_amount=int(plan_data["price"] * 100),
+            unit_amount=int(amount * 100),
             currency="eur",
-            recurring={"interval": "month"},
+            recurring={"interval": interval},
         )
-        plan_data["stripe_price_id"] = price.id
+        plan_data[price_field] = price.id
 
     # Créer ou récupérer le customer Stripe
     if not user.stripe_customer_id:
@@ -523,11 +553,11 @@ async def stripe_checkout(
         stripe.checkout.Session.create,
         customer=user.stripe_customer_id,
         payment_method_types=["card"],
-        line_items=[{"price": plan_data["stripe_price_id"], "quantity": 1}],
+        line_items=[{"price": plan_data[price_field], "quantity": 1}],
         mode="subscription",
-        success_url=f"https://cut.blackbeardai.org/dashboard?session={{CHECKOUT_SESSION_ID}}",
+        success_url=f"https://cut.blackbeardai.org/dashboard?session=***",
         cancel_url=f"https://cut.blackbeardai.org/pricing",
-        metadata={"user_id": user.id, "plan": plan},
+        metadata={"user_id": user.id, "plan": plan, "billing": billing},
     )
     return {"url": session.url}
 

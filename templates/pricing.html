@@ -10,15 +10,15 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo">🎬 YT Cut</a>
+            <a href="/" class="logo">YT Cut</a>
             <div class="nav-links">
                 <a href="/pricing" class="active">Tarifs</a>
                 {% if user %}
                 <a href="/dashboard">Dashboard</a>
-                <a href="#" onclick="logout()">Déconnexion</a>
+                <a href="#" onclick="logout()">Déco</a>
                 {% else %}
                 <a href="/login">Connexion</a>
-                <a href="/signup" class="btn-primary">Essayer gratuitement</a>
+                <a href="/signup" class="btn-primary">Essayer</a>
                 {% endif %}
             </div>
         </div>
@@ -27,27 +27,37 @@
     <section class="pricing-page">
         <div class="container">
             <h1>Choisissez votre plan</h1>
-            <p class="subtitle">Débloquez plus de crédits et des durées plus longues</p>
+            <p class="subtitle">Annuel = 4 mois offerts. Résiliez quand vous voulez.</p>
+
+            <div class="billing-toggle">
+                <span class="toggle-label active" id="label-annual" onclick="switchBilling('annual')">
+                    Annuel <span class="save-badge">-33%</span>
+                </span>
+                <span class="toggle-label" id="label-monthly" onclick="switchBilling('monthly')">
+                    Mensuel
+                </span>
+            </div>
 
             <div class="pricing-grid large">
                 {% for key, plan in plans.items() %}
-                <div class="pricing-card {% if key == 'pro' %}popular{% endif %} {% if user and user.plan == key %}current{% endif %}">
-                    {% if key == 'pro' %}<div class="popular-badge">Populaire</div>{% endif %}
-                    {% if user and user.plan == key %}<div class="current-badge">Actuel</div>{% endif %}
+                <div class="pricing-card {% if key == 'creator' %}popular{% endif %} {% if user and user.plan == key %}current{% endif %}">
+                    {% if key == 'creator' %}<div class="popular-badge">⭐ Meilleur rapport</div>{% endif %}
+                    {% if user and user.plan == key %}<div class="current-badge">✓ Actuel</div>{% endif %}
                     <h3>{{ plan.name }}</h3>
                     <div class="price">
-                        {% if plan.price == 0 %}
-                        Gratuit
-                        {% else %}
-                        {{ "%.2f"|format(plan.price) }}€<span>/mois</span>
-                        {% endif %}
+                        <span class="price-annual">{{ "%.2f"|format(plan.annual_price / 12) }}€</span>
+                        <span class="price-monthly hidden">{{ "%.2f"|format(plan.monthly_price) }}€</span>
+                        <span class="price-period">/mois</span>
                     </div>
+                    {% if plan.annual_price > 0 %}
+                    <div class="price-annual-detail">{{ "%.0f"|format(plan.annual_price) }}€/an</div>
+                    <div class="price-monthly-detail hidden">{{ "%.2f"|format(plan.monthly_price) }}€/mois</div>
+                    {% endif %}
                     <ul>
-                        <li>✅ 📺 {{ plan.quality }}p</li>
-                        <li>✅ {{ plan.credits }} téléchargement{% if plan.credits > 1 %}s{% endif %}</li>
-                        <li>✅ Vidéos jusqu'à {{ plan.max_duration }}s</li>
-                        <li>✅ Découpage illimité</li>
-                        <li>✅ Téléchargement direct</li>
+                        <li>📺 {{ plan.quality }}p</li>
+                        <li>🎬 {{ plan.credits }} DL{% if plan.credits > 1 or plan.credits == 999999 %}s{% endif %}</li>
+                        <li>⏱️ {{ plan.max_duration }}s max</li>
+                        <li>✂️ Découpage</li>
                     </ul>
                     {% if key != 'free' %}
                         {% if user and user.plan == key %}
@@ -55,7 +65,11 @@
                         {% elif user %}
                         <button onclick="subscribe('{{ key }}')" class="btn-plan" id="btn-{{ key }}">Choisir {{ plan.name }}</button>
                         {% else %}
-                        <a href="/signup?plan={{ key }}" class="btn-plan">S'inscrire — {{ plan.name }}</a>
+                        <a href="/signup" class="btn-plan">Choisir {{ plan.name }}</a>
+                        {% endif %}
+                    {% else %}
+                        {% if not user %}
+                        <a href="/signup" class="btn-plan btn-ghost">Gratuit</a>
                         {% endif %}
                     {% endif %}
                 </div>
@@ -64,26 +78,36 @@
         </div>
     </section>
 
-    {% if user %}
     <script>
     const stripe = Stripe('{{ stripe_pk }}');
+    let currentBilling = 'annual';
+
+    function switchBilling(mode) {
+        currentBilling = mode;
+        document.getElementById('label-annual').classList.toggle('active', mode === 'annual');
+        document.getElementById('label-monthly').classList.toggle('active', mode === 'monthly');
+        document.querySelectorAll('.price-annual').forEach(el => el.classList.toggle('hidden', mode !== 'annual'));
+        document.querySelectorAll('.price-monthly').forEach(el => el.classList.toggle('hidden', mode !== 'monthly'));
+        document.querySelectorAll('.price-annual-detail').forEach(el => el.classList.toggle('hidden', mode !== 'annual'));
+        document.querySelectorAll('.price-monthly-detail').forEach(el => el.classList.toggle('hidden', mode !== 'monthly'));
+    }
 
     function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.href='/'); }
 
     async function subscribe(plan) {
         const btn = document.getElementById('btn-' + plan);
         btn.disabled = true; btn.textContent = '⏳...';
-
         try {
-            const form = new FormData(); form.append('plan', plan);
+            const form = new FormData();
+            form.append('plan', plan);
+            form.append('billing', currentBilling);
             const r = await fetch('/api/stripe/create-checkout', {method:'POST', body: form});
             const data = await r.json();
             if (r.ok) { window.location.href = data.url; }
-            else { alert('Erreur: ' + (data.detail || 'Inconnue')); }
+            else { alert('Erreur'); }
         } catch(e) { alert('Erreur réseau'); }
         btn.disabled = false; btn.textContent = 'Choisir ' + plan;
     }
     </script>
-    {% endif %}
 </body>
 </html>

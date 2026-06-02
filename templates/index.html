@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YT Cut — Télécharger et couper des vidéos YouTube</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo">🎬 YT Cut</a>
+            <a href="/" class="logo">YT Cut</a>
             <div class="nav-links">
                 <a href="/pricing">Tarifs</a>
                 {% if user %}
                 <a href="/dashboard">Dashboard</a>
-                <span class="credits-badge">{{ user.credits }} crédits</span>
-                <span class="plan-badge plan-{{ user.plan }}">{{ plans[user.plan].name }}</span>
-                <a href="#" onclick="logout()">Déconnexion</a>
+                <span class="credits-badge">{{ user.credits }} crédit{% if user.credits > 1 %}s{% endif %}</span>
+                <a href="#" onclick="logout()">Déco</a>
                 {% else %}
                 <a href="/login">Connexion</a>
-                <a href="/signup" class="btn-primary">Essayer gratuitement</a>
+                <a href="/signup" class="btn-primary">Essayer</a>
                 {% endif %}
             </div>
         </div>
@@ -28,74 +28,75 @@
     <section class="hero">
         <div class="container">
             <h1>Téléchargez et coupez vos vidéos YouTube</h1>
-            <p class="subtitle">Extrayez les meilleurs moments. Simple, rapide, sans pub.</p>
+            <p class="subtitle">Extrayez les meilleurs moments. Sans pub, sans limite de temps.</p>
 
             {% if user %}
             <div class="download-box" id="download-box">
-                <input type="url" id="youtube-url" placeholder="Collez votre URL YouTube ici..." />
-                <button onclick="startDownload()" class="btn-cta" id="dl-btn">📥 Télécharger</button>
+                <input type="url" id="youtube-url" placeholder="Collez une URL YouTube..." />
+                <button onclick="startDownload()" class="btn-cta" id="dl-btn">Télécharger</button>
                 <div id="dl-status" class="status-msg"></div>
             </div>
             {% else %}
             <div class="cta-box">
-                <p>🎁 <strong>1 téléchargement gratuit</strong> (480p) — inscription obligatoire</p>
-                <a href="/signup" class="btn-cta">Créer un compte gratuit</a>
+                <p>1 téléchargement gratuit — puis à partir de <strong>1.99€</strong></p>
+                <a href="/signup" class="btn-cta">Commencer gratuitement</a>
             </div>
             {% endif %}
         </div>
     </section>
 
-    <section class="features">
+    <section class="pricing-section" id="pricing">
         <div class="container">
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📥</div>
-                    <h3>Téléchargement direct</h3>
-                    <p>Collez l'URL, cliquez, c'est téléchargé. Qualité jusqu'à 1080p.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">✂️</div>
-                    <h3>Découpage précis</h3>
-                    <p>Sélectionnez le début et la fin, extrayez exactement ce que vous voulez.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Rapide</h3>
-                    <p>Traitement optimisé sur serveurs dédiés. Votre extrait en quelques secondes.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💶</div>
-                    <h3>Crédits flexibles</h3>
-                    <p>1 téléchargement gratuit, puis des plans adaptés à vos besoins.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+            <h2>Simple, transparent</h2>
 
-    <section class="pricing-section">
-        <div class="container">
-            <h2>Nos offres</h2>
+            <!-- Billing toggle -->
+            <div class="billing-toggle">
+                <span class="toggle-label active" id="label-annual" onclick="switchBilling('annual')">
+                    Annuel <span class="save-badge">-33%</span>
+                </span>
+                <span class="toggle-label" id="label-monthly" onclick="switchBilling('monthly')">
+                    Mensuel
+                </span>
+            </div>
+
             <div class="pricing-grid">
                 {% for key, plan in plans.items() %}
-                <div class="pricing-card {% if key == 'pro' %}popular{% endif %}">
-                    {% if key == 'pro' %}<div class="popular-badge">Populaire</div>{% endif %}
+                <div class="pricing-card {% if key == 'creator' %}popular{% endif %}">
+                    {% if key == 'creator' %}<div class="popular-badge">⭐ Meilleur rapport</div>{% endif %}
                     <h3>{{ plan.name }}</h3>
                     <div class="price">
-                        {% if plan.price == 0 %}
-                        Gratuit
-                        {% else %}
-                        {{ "%.2f"|format(plan.price) }}€<span>/mois</span>
-                        {% endif %}
+                        <span class="price-annual">{{ "%.2f"|format(plan.annual_price / 12) }}€</span>
+                        <span class="price-monthly hidden">{{ "%.2f"|format(plan.monthly_price) }}€</span>
+                        <span class="price-period">/mois</span>
                     </div>
+                    {% if plan.annual_price > 0 %}
+                    <div class="price-annual-detail">
+                        {{ "%.0f"|format(plan.annual_price) }}€ facturés par an
+                    </div>
+                    <div class="price-monthly-detail hidden">
+                        {{ "%.2f"|format(plan.monthly_price) }}€ facturés par mois
+                    </div>
+                    {% endif %}
                     <ul>
-                        <li>📺 Qualité {{ plan.quality }}p</li>
-                        <li>🎬 {{ plan.credits }} téléchargement{% if plan.credits > 1 %}s{% endif %}</li>
-                        <li>Vidéos jusqu'à {{ plan.max_duration }}s</li>
-                        <li>Qualité 1080p</li>
-                        <li>Découpage illimité</li>
+                        <li class="quality-line">📺 {{ plan.quality }}p</li>
+                        <li>🎬 {{ plan.credits }} téléchargement{% if plan.credits > 1 or plan.credits == 999999 %}s{% endif %}</li>
+                        <li>⏱️ Jusqu'à {{ plan.max_duration }}s</li>
+                        <li>✂️ Découpage inclus</li>
                     </ul>
                     {% if key != 'free' %}
-                    <a href="/signup?plan={{ key }}" class="btn-plan">Choisir</a>
+                        {% if user %}
+                        <button onclick="subscribe('{{ key }}')" class="btn-plan" id="btn-{{ key }}">
+                            Choisir {{ plan.name }}
+                        </button>
+                        {% else %}
+                        <a href="/signup" class="btn-plan">Choisir {{ plan.name }}</a>
+                        {% endif %}
+                    {% else %}
+                        {% if not user %}
+                        <a href="/signup" class="btn-plan btn-ghost">Gratuit</a>
+                        {% else %}
+                        <div class="current-plan-label">Plan actuel</div>
+                        {% endif %}
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -105,44 +106,59 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2026 YT Cut. Tous droits réservés.</p>
+            <p>YT Cut &copy; 2026 — Pas de pub, pas de tracking.</p>
         </div>
     </footer>
 
     <script src="/static/js/main.js"></script>
     <script>
-    function logout() {
-        fetch('/api/auth/logout', {method:'POST'}).then(() => location.reload());
+    const stripe = Stripe('{{ stripe_pk }}');
+    let currentBilling = 'annual';
+
+    function switchBilling(mode) {
+        currentBilling = mode;
+        document.getElementById('label-annual').classList.toggle('active', mode === 'annual');
+        document.getElementById('label-monthly').classList.toggle('active', mode === 'monthly');
+        document.querySelectorAll('.price-annual').forEach(el => el.classList.toggle('hidden', mode !== 'annual'));
+        document.querySelectorAll('.price-monthly').forEach(el => el.classList.toggle('hidden', mode !== 'monthly'));
+        document.querySelectorAll('.price-annual-detail').forEach(el => el.classList.toggle('hidden', mode !== 'annual'));
+        document.querySelectorAll('.price-monthly-detail').forEach(el => el.classList.toggle('hidden', mode !== 'monthly'));
     }
+
+    function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.reload()); }
+
     {% if user %}
     async function startDownload() {
         const url = document.getElementById('youtube-url').value.trim();
         const status = document.getElementById('dl-status');
         const btn = document.getElementById('dl-btn');
-
-        if (!url) { status.textContent = 'Collez une URL YouTube'; return; }
-
-        btn.disabled = true;
-        btn.textContent = '⏳ Téléchargement...';
-        status.textContent = '';
-
+        if (!url) { status.textContent = 'Collez une URL'; return; }
+        btn.disabled = true; btn.textContent = '⏳...';
         try {
-            const form = new FormData();
-            form.append('url', url);
+            const form = new FormData(); form.append('url', url);
             const r = await fetch('/api/videos/download', {method:'POST', body: form});
             const data = await r.json();
-            if (r.ok) {
-                status.innerHTML = '✅ Téléchargé ! <a href="/dashboard">Voir dans le dashboard</a>';
-            } else {
-                status.textContent = '❌ ' + (data.detail || 'Erreur');
-            }
-        } catch(e) {
-            status.textContent = '❌ Erreur réseau';
-        }
-        btn.disabled = false;
-        btn.textContent = '📥 Télécharger';
+            if (r.ok) { status.innerHTML = '✅ Fait ! <a href="/dashboard">Dashboard</a>'; }
+            else { status.textContent = '❌ ' + (data.detail || 'Erreur'); }
+        } catch(e) { status.textContent = '❌ Erreur réseau'; }
+        btn.disabled = false; btn.textContent = 'Télécharger';
     }
     {% endif %}
+
+    async function subscribe(plan) {
+        const btn = document.getElementById('btn-' + plan);
+        btn.disabled = true; btn.textContent = '⏳...';
+        try {
+            const form = new FormData();
+            form.append('plan', plan);
+            form.append('billing', currentBilling);
+            const r = await fetch('/api/stripe/create-checkout', {method:'POST', body: form});
+            const data = await r.json();
+            if (r.ok) { window.location.href = data.url; }
+            else { alert('Erreur: ' + (data.detail || 'Inconnue')); }
+        } catch(e) { alert('Erreur réseau'); }
+        btn.disabled = false; btn.textContent = 'Choisir ' + plan;
+    }
     </script>
 </body>
 </html>
