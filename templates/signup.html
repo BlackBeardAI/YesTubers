@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription — YT Cut</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🎬 YT Cut</a>
+            <div class="nav-links">
+                <a href="/pricing">Tarifs</a>
+                <a href="/login">Connexion</a>
+                <a href="/signup" class="btn-primary active">Créer un compte</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="auth-section">
+        <div class="auth-card">
+            <h2>Créer un compte</h2>
+            <p class="auth-sub">🎁 <strong>3 crédits gratuits</strong> inclus</p>
+            <form id="signup-form">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="vous@email.com" />
+                <label>Mot de passe</label>
+                <input type="password" name="password" required minlength="6" placeholder="6 caractères minimum" />
+                <div id="signup-status" class="status-msg"></div>
+                <button type="submit" class="btn-cta full-width">Créer mon compte</button>
+            </form>
+            <p class="auth-link">Déjà un compte ? <a href="/login">Se connecter</a></p>
+        </div>
+    </section>
+
+    <script>
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = new FormData(e.target);
+        const status = document.getElementById('signup-status');
+        try {
+            const r = await fetch('/api/auth/signup', {method:'POST', body: form});
+            const data = await r.json();
+            if (r.ok) { window.location.href = '/dashboard'; }
+            else { status.textContent = '❌ ' + (data.detail || 'Erreur'); }
+        } catch(err) { status.textContent = '❌ Erreur réseau'; }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarifs — YT Cut</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🎬 YT Cut</a>
+            <div class="nav-links">
+                <a href="/pricing" class="active">Tarifs</a>
+                {% if user %}
+                <a href="/dashboard">Dashboard</a>
+                <a href="#" onclick="logout()">Déconnexion</a>
+                {% else %}
+                <a href="/login">Connexion</a>
+                <a href="/signup" class="btn-primary">Essayer gratuitement</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <section class="pricing-page">
+        <div class="container">
+            <h1>Choisissez votre plan</h1>
+            <p class="subtitle">Débloquez plus de crédits et des durées plus longues</p>
+
+            <div class="pricing-grid large">
+                {% for key, plan in plans.items() %}
+                <div class="pricing-card {% if key == 'pro' %}popular{% endif %} {% if user and user.plan == key %}current{% endif %}">
+                    {% if key == 'pro' %}<div class="popular-badge">Populaire</div>{% endif %}
+                    {% if user and user.plan == key %}<div class="current-badge">Actuel</div>{% endif %}
+                    <h3>{{ plan.name }}</h3>
+                    <div class="price">
+                        {% if plan.price == 0 %}
+                        Gratuit
+                        {% else %}
+                        {{ "%.2f"|format(plan.price) }}€<span>/mois</span>
+                        {% endif %}
+                    </div>
+                    <ul>
+                        <li>✅ {{ plan.credits }} crédits</li>
+                        <li>✅ Vidéos jusqu'à {{ plan.max_duration }}s</li>
+                        <li>✅ Qualité 1080p</li>
+                        <li>✅ Découpage illimité</li>
+                        <li>✅ Téléchargement direct</li>
+                    </ul>
+                    {% if key != 'free' %}
+                        {% if user and user.plan == key %}
+                        <button class="btn-plan disabled" disabled>Plan actuel</button>
+                        {% elif user %}
+                        <button onclick="subscribe('{{ key }}')" class="btn-plan" id="btn-{{ key }}">Choisir {{ plan.name }}</button>
+                        {% else %}
+                        <a href="/signup?plan={{ key }}" class="btn-plan">S'inscrire — {{ plan.name }}</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {% if user %}
+    <script>
+    const stripe = Stripe('{{ stripe_pk }}');
+
+    function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.href='/'); }
+
+    async function subscribe(plan) {
+        const btn = document.getElementById('btn-' + plan);
+        btn.disabled = true; btn.textContent = '⏳...';
+
+        try {
+            const form = new FormData(); form.append('plan', plan);
+            const r = await fetch('/api/stripe/create-checkout', {method:'POST', body: form});
+            const data = await r.json();
+            if (r.ok) { window.location.href = data.url; }
+            else { alert('Erreur: ' + (data.detail || 'Inconnue')); }
+        } catch(e) { alert('Erreur réseau'); }
+        btn.disabled = false; btn.textContent = 'Choisir ' + plan;
+    }
+    </script>
+    {% endif %}
+</body>
+</html>

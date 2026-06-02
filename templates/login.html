@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion — YT Cut</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🎬 YT Cut</a>
+            <div class="nav-links">
+                <a href="/pricing">Tarifs</a>
+                <a href="/login" class="active">Connexion</a>
+                <a href="/signup" class="btn-primary">Créer un compte</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="auth-section">
+        <div class="auth-card">
+            <h2>Connexion</h2>
+            <form id="login-form">
+                <label>Email</label>
+                <input type="email" name="email" required placeholder="vous@email.com" />
+                <label>Mot de passe</label>
+                <input type="password" name="password" required placeholder="••••••••" />
+                <div id="login-status" class="status-msg"></div>
+                <button type="submit" class="btn-cta full-width">Se connecter</button>
+            </form>
+            <p class="auth-link">Pas de compte ? <a href="/signup">Créer un compte</a></p>
+        </div>
+    </section>
+
+    <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = new FormData(e.target);
+        const status = document.getElementById('login-status');
+        try {
+            const r = await fetch('/api/auth/login', {method:'POST', body: form});
+            const data = await r.json();
+            if (r.ok) { window.location.href = '/dashboard'; }
+            else { status.textContent = '❌ ' + (data.detail || 'Erreur'); }
+        } catch(err) { status.textContent = '❌ Erreur réseau'; }
+    });
+    </script>
+</body>
+</html>

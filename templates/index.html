@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT Cut — Télécharger et couper des vidéos YouTube</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🎬 YT Cut</a>
+            <div class="nav-links">
+                <a href="/pricing">Tarifs</a>
+                {% if user %}
+                <a href="/dashboard">Dashboard</a>
+                <span class="credits-badge">{{ user.credits }} crédits</span>
+                <span class="plan-badge plan-{{ user.plan }}">{{ plans[user.plan].name }}</span>
+                <a href="#" onclick="logout()">Déconnexion</a>
+                {% else %}
+                <a href="/login">Connexion</a>
+                <a href="/signup" class="btn-primary">Essayer gratuitement</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Téléchargez et coupez vos vidéos YouTube</h1>
+            <p class="subtitle">Extrayez les meilleurs moments. Simple, rapide, sans pub.</p>
+
+            {% if user %}
+            <div class="download-box" id="download-box">
+                <input type="url" id="youtube-url" placeholder="Collez votre URL YouTube ici..." />
+                <button onclick="startDownload()" class="btn-cta" id="dl-btn">📥 Télécharger</button>
+                <div id="dl-status" class="status-msg"></div>
+            </div>
+            {% else %}
+            <div class="cta-box">
+                <p>🎁 <strong>3 crédits gratuits</strong> pour commencer</p>
+                <a href="/signup" class="btn-cta">Créer un compte gratuit</a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="features">
+        <div class="container">
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📥</div>
+                    <h3>Téléchargement direct</h3>
+                    <p>Collez l'URL, cliquez, c'est téléchargé. Qualité jusqu'à 1080p.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✂️</div>
+                    <h3>Découpage précis</h3>
+                    <p>Sélectionnez le début et la fin, extrayez exactement ce que vous voulez.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Rapide</h3>
+                    <p>Traitement optimisé sur serveurs dédiés. Votre extrait en quelques secondes.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💶</div>
+                    <h3>Crédits flexibles</h3>
+                    <p>3 crédits gratuits, puis des plans adaptés à vos besoins.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing-section">
+        <div class="container">
+            <h2>Nos offres</h2>
+            <div class="pricing-grid">
+                {% for key, plan in plans.items() %}
+                <div class="pricing-card {% if key == 'pro' %}popular{% endif %}">
+                    {% if key == 'pro' %}<div class="popular-badge">Populaire</div>{% endif %}
+                    <h3>{{ plan.name }}</h3>
+                    <div class="price">
+                        {% if plan.price == 0 %}
+                        Gratuit
+                        {% else %}
+                        {{ "%.2f"|format(plan.price) }}€<span>/mois</span>
+                        {% endif %}
+                    </div>
+                    <ul>
+                        <li>{{ plan.credits }} crédits</li>
+                        <li>Vidéos jusqu'à {{ plan.max_duration }}s</li>
+                        <li>Qualité 1080p</li>
+                        <li>Découpage illimité</li>
+                    </ul>
+                    {% if key != 'free' %}
+                    <a href="/signup?plan={{ key }}" class="btn-plan">Choisir</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 YT Cut. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+    function logout() {
+        fetch('/api/auth/logout', {method:'POST'}).then(() => location.reload());
+    }
+    {% if user %}
+    async function startDownload() {
+        const url = document.getElementById('youtube-url').value.trim();
+        const status = document.getElementById('dl-status');
+        const btn = document.getElementById('dl-btn');
+
+        if (!url) { status.textContent = 'Collez une URL YouTube'; return; }
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Téléchargement...';
+        status.textContent = '';
+
+        try {
+            const form = new FormData();
+            form.append('url', url);
+            const r = await fetch('/api/videos/download', {method:'POST', body: form});
+            const data = await r.json();
+            if (r.ok) {
+                status.innerHTML = '✅ Téléchargé ! <a href="/dashboard">Voir dans le dashboard</a>';
+            } else {
+                status.textContent = '❌ ' + (data.detail || 'Erreur');
+            }
+        } catch(e) {
+            status.textContent = '❌ Erreur réseau';
+        }
+        btn.disabled = false;
+        btn.textContent = '📥 Télécharger';
+    }
+    {% endif %}
+    </script>
+</body>
+</html>

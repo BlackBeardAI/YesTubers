@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — YT Cut</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">🎬 YT Cut</a>
+            <div class="nav-links">
+                <a href="/pricing">Tarifs</a>
+                <a href="/dashboard" class="active">Dashboard</a>
+                <span class="credits-badge">{{ user.credits }} crédits</span>
+                <span class="plan-badge plan-{{ user.plan }}">{{ plans[user.plan].name }}</span>
+                <a href="#" onclick="logout()">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="dashboard">
+        <div class="container">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value">{{ user.credits }}</span>
+                    <span class="stat-label">Crédits restants</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">{{ plans[user.plan].name }}</span>
+                    <span class="stat-label">Plan actuel</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">{{ plans[user.plan].max_duration }}s</span>
+                    <span class="stat-label">Durée max</span>
+                </div>
+                {% if user.plan != 'free' and user.stripe_sub_id %}
+                <div class="stat">
+                    <span class="stat-value">Actif</span>
+                    <span class="stat-label">Abonnement</span>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if user.plan == 'free' %}
+            <div class="upgrade-banner">
+                💡 Plus que {{ user.credits }} crédit(s) — <a href="/pricing">Passez à un plan supérieur</a>
+            </div>
+            {% endif %}
+
+            <div class="download-box compact">
+                <input type="url" id="youtube-url" placeholder="Collez une URL YouTube..." />
+                <button onclick="downloadVideo()" class="btn-cta" id="dl-btn">📥 Télécharger</button>
+                <div id="dl-status" class="status-msg"></div>
+            </div>
+
+            <h2>📹 Mes vidéos</h2>
+            <div class="video-grid" id="video-grid">
+                {% if videos %}
+                {% for v in videos %}
+                <div class="video-card" id="v-{{ v.id }}">
+                    <div class="video-thumb">
+                        {% if v.thumbnail %}
+                        <img src="/api/thumbnails/{{ v.thumbnail }}" alt="{{ v.title }}" />
+                        {% else %}
+                        <div class="no-thumb">🎬</div>
+                        {% endif %}
+                        {% if v.status == 'processing' %}
+                        <div class="video-overlay processing"><span>⏳ Traitement...</span></div>
+                        {% elif v.status == 'error' %}
+                        <div class="video-overlay error"><span>❌ Erreur</span></div>
+                        {% endif %}
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">{{ v.title or 'Sans titre' }}</div>
+                        <div class="video-meta">{{ v.duration|round|int }}s · {{ (v.filesize / 1048576)|round(1) }} MB</div>
+                        {% if v.status == 'done' %}
+                        <div class="video-actions">
+                            <a href="/api/videos/{{ v.id }}/download" class="btn-sm">📥 DL</a>
+                            <button onclick="showCutter('{{ v.id }}', {{ v.duration }})" class="btn-sm">✂️ Cut</button>
+                            <button onclick="deleteVideo('{{ v.id }}')" class="btn-sm btn-danger">🗑️</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="empty-state">Aucune vidéo. Téléchargez votre première vidéo !</p>
+                {% endif %}
+            </div>
+
+            <h2>✂️ Mes cuts</h2>
+            <div class="cuts-list">
+                {% if cuts %}
+                {% for c in cuts %}
+                <div class="cut-item" id="c-{{ c.id }}">
+                    <span>Cut {{ c.id[:8] }} — {{ c.start_time }}s → {{ c.end_time }}s</span>
+                    <span>{{ (c.filesize / 1048576)|round(2) }} MB</span>
+                    <span class="cut-date">{{ c.created_at.strftime('%d/%m %H:%M') }}</span>
+                    {% if c.status == 'done' %}
+                    <a href="/api/cuts/{{ c.id }}/download" class="btn-sm">📥 DL</a>
+                    {% elif c.status == 'processing' %}
+                    <span class="badge-processing">⏳</span>
+                    {% endif %}
+                    <button onclick="deleteCut('{{ c.id }}')" class="btn-sm btn-danger">🗑️</button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="empty-state">Aucun cut. Coupez vos vidéos pour extraire des moments !</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Cut Modal -->
+    <div class="modal" id="cut-modal">
+        <div class="modal-content">
+            <h3>✂️ Découper la vidéo</h3>
+            <div class="cut-controls">
+                <label>Début (secondes) : <input type="number" id="cut-start" min="0" step="0.1" value="0" /></label>
+                <label>Fin (secondes) : <input type="number" id="cut-end" min="0" step="0.1" value="10" /></label>
+            </div>
+            <div id="cut-status" class="status-msg"></div>
+            <div class="modal-actions">
+                <button onclick="doCut()" class="btn-cta" id="cut-btn">✂️ Découper</button>
+                <button onclick="closeModal()" class="btn-secondary">Annuler</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+    let currentVideoId = null;
+    let currentDuration = 0;
+
+    function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.href='/'); }
+
+    async function downloadVideo() {
+        const url = document.getElementById('youtube-url').value.trim();
+        const status = document.getElementById('dl-status');
+        const btn = document.getElementById('dl-btn');
+        if (!url) return;
+
+        btn.disabled = true; btn.textContent = '⏳...'; status.textContent = '';
+        try {
+            const form = new FormData(); form.append('url', url);
+            const r = await fetch('/api/videos/download', {method:'POST', body: form});
+            const data = await r.json();
+            if (r.ok) { status.textContent = '✅ Fait !'; location.reload(); }
+            else { status.textContent = '❌ ' + (data.detail || 'Erreur'); }
+        } catch(e) { status.textContent = '❌ Erreur'; }
+        btn.disabled = false; btn.textContent = '📥 Télécharger';
+    }
+
+    function showCutter(videoId, duration) {
+        currentVideoId = videoId;
+        currentDuration = duration;
+        document.getElementById('cut-end').value = Math.min(10, duration);
+        document.getElementById('cut-end').max = duration;
+        document.getElementById('cut-status').textContent = '';
+        document.getElementById('cut-modal').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('cut-modal').style.display = 'none'; }
+
+    async function doCut() {
+        const start = parseFloat(document.getElementById('cut-start').value);
+        const end = parseFloat(document.getElementById('cut-end').value);
+        const status = document.getElementById('cut-status');
+        const btn = document.getElementById('cut-btn');
+
+        if (start >= end || end > currentDuration) {
+            status.textContent = '❌ Timestamps invalides'; return;
+        }
+
+        btn.disabled = true; btn.textContent = '⏳...';
+        try {
+            const form = new FormData();
+            form.append('video_id', currentVideoId);
+            form.append('start_time', start);
+            form.append('end_time', end);
+            const r = await fetch('/api/cuts/create', {method:'POST', body: form});
+            const data = await r.json();
+            if (r.ok) { status.textContent = '✅ Cut créé !'; setTimeout(() => location.reload(), 1000); }
+            else { status.textContent = '❌ ' + (data.detail || 'Erreur'); }
+        } catch(e) { status.textContent = '❌ Erreur'; }
+        btn.disabled = false; btn.textContent = '✂️ Découper';
+    }
+
+    async function deleteVideo(id) {
+        if (!confirm('Supprimer cette vidéo ?')) return;
+        await fetch('/api/videos/' + id, {method:'DELETE'});
+        document.getElementById('v-' + id)?.remove();
+    }
+
+    async function deleteCut(id) {
+        if (!confirm('Supprimer ce cut ?')) return;
+        await fetch('/api/cuts/' + id, {method:'DELETE'});
+        document.getElementById('c-' + id)?.remove();
+    }
+    </script>
+</body>
+</html>
