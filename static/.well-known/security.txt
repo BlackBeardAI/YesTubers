@@ -1,0 +1,4 @@
+Contact: mailto:contact@yestubers.cloud
+Expires: 2027-07-06T00:00:00.000Z
+Acknowledgments: https://yestubers.cloud/about
+Preferred-Languages: fr, en

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>Politique de Confidentialité — Yestubers</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="description" content="Politique de confidentialité de Yestubers. Découvrez comment nous protégeons vos données.">
+
+    <meta property="og:title" content="Politique de Confidentialité">
+    <meta property="og:description" content="Politique de confidentialité de Yestubers. Découvrez comment nous protégeons vos données.">
+    <meta property="og:url" content="https://yestubers.cloud/privacy">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Yestubers">
+    <meta property="og:locale" content="{{ locale }}_{{ i18n['_og_region'] }}">
+    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Politique de Confidentialité">
+    <meta name="twitter:description" content="Politique de confidentialité de Yestubers. Découvrez comment nous protégeons vos données.">
+    <meta name="twitter:image" content="https://yestubers.cloud/static/og-image.png"><meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yestubers.cloud/privacy">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Yestubers",
+        "url": "https://yestubers.cloud/",
+        "logo": "https://yestubers.cloud/static/favicon.svg",
+        "sameAs": [],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "contact@yestubers.cloud",
+            "contactType": "customer support"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Yestubers",
+        "url": "https://yestubers.cloud/",
+        "description": "Convertisseur YouTube MP3/MP4 gratuit et rapide.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+        "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "1250"},
+        "author": {"@type": "Organization", "name": "Yestubers"}
+    }
+    </script>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <nav class="navbar">
+    <div class="container nav-container">
+        <a href="/" class="logo">
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+            </svg>
+            <span>Yestubers</span>
+        </a>
+
+        <div class="nav-links" id="nav-links">
+            <a href="/pricing">{{ i18n.nav_pricing if 'nav_pricing' in i18n else 'Pricing' }}</a>
+            {% if user is defined and user %}
+            <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
+            <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Logout' }}</a>
+            {% else %}
+            <a href="/login">{{ i18n.nav_login if 'nav_login' in i18n else 'Login' }}</a>
+            <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup if 'nav_signup' in i18n else 'Try free' }}</a>
+            {% endif %}
+        </div>
+
+        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </div>
+</nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Politique de <span class="gradient-text">Confidentialité</span></h1>
+            <p>Dernière mise à jour : 6 juillet 2026</p>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="container">
+            <div class="content-card">
+                <h2>1. Données collectées</h2>
+                <p>Yestubers collecte uniquement les données nécessaires au fonctionnement du service :</p>
+                <ul>
+                    <li><strong>Compte utilisateur</strong> : email et hash du mot de passe (si vous créez un compte).</li>
+                    <li><strong>Logs serveur</strong> : adresse IP et URL demandée, conservés 7 jours maximum pour la sécurité.</li>
+                    <li><strong>Paiements</strong> : gérés par Stripe. Nous ne stockons pas vos informations bancaires.</li>
+                </ul>
+
+                <h2>2. Fichiers téléchargés</h2>
+                <p>Nous ne conservons <strong>aucun fichier</strong> téléchargé via le service. Les conversions utilisent le streaming progressif : les données transitent directement de nos serveurs vers votre navigateur sans stockage persistant.</p>
+
+                <h2>3. Cookies</h2>
+                <p>Nous utilisons uniquement des cookies essentiels : session d'authentification et consentement cookies. Aucun cookie publicitaire ou de traçage tiers n'est déposé.</p>
+
+                <h2>4. Partage des données</h2>
+                <p>Vos données ne sont jamais revendues. Nous ne les partageons qu'avec :</p>
+                <ul>
+                    <li>Stripe, pour le traitement des paiements.</li>
+                    <li>Les autorités compétentes, en cas d'obligation légale.</li>
+                </ul>
+
+                <h2>5. Vos droits</h2>
+                <p>Conformément au RGPD, vous disposez d'un droit d'accès, de rectification, d'effacement et de portabilité de vos données. Contactez-nous à <a href="mailto:contact@yestubers.cloud">contact@yestubers.cloud</a>.</p>
+
+                <h2>6. Contact</h2>
+                <p>Responsable du traitement : Yestubers. Email : <a href="mailto:contact@yestubers.cloud">contact@yestubers.cloud</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo"><span>Yestubers</span></div>
+                    <p>Le convertisseur vidéo simple, rapide et respectueux de votre vie privée.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Produit</h4>
+                    <a href="/pricing">Tarifs</a>
+                    {% if user is defined and user %}
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="#" onclick="logout(); return false;">Déconnexion</a>
+                    {% else %}
+                    <a href="/login">Connexion</a>
+                    <a href="/signup">Inscription</a>
+                    {% endif %}
+                </div>
+                <div class="footer-links">
+                    <h4>Légal</h4>
+                    <a href="/terms">CGU</a>
+                    <a href="/privacy">Confidentialité</a>
+                    <a href="/dmca">DMCA</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Aide</h4>
+                    <a href="/about">À propos</a>
+                    <a href="/contact">Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Yestubers. Tous droits réservés.</p></div>
+        </div>
+    </footer>
+
+
+<script id="nav-links-toggle-js">
+(function(){
+    var toggle = document.getElementById('nav-toggle');
+    var links = document.getElementById('nav-links');
+    if (!toggle || !links) return;
+    toggle.addEventListener('click', function(){
+        var open = links.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    links.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        });
+    });
+    document.addEventListener('click', function(e){
+        if (!toggle.contains(e.target) && !links.contains(e.target)) {
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+</script>
+</body>
+</html>

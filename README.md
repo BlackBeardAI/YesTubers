@@ -1,8 +1,8 @@
-# 🎬 YT Cut — YouTube Video Downloader & Cutter SaaS
+# 🎬 YesTubers — YouTube Video Downloader & Cutter SaaS
 
 Téléchargez et coupez vos vidéos YouTube. **Freemium** — 1 téléchargement gratuit (480p), puis abonnements payants.
 
-[![Repo](https://img.shields.io/badge/GitHub-BlackBeardAI%2FYTBCutandDll-blue)](https://github.com/BlackBeardAI/YTBCutandDll)
+[![Repo](https://img.shields.io/badge/GitHub-BlackBeardAI%2FYesTubers-blue)](https://github.com/BlackBeardAI/YesTubers)
 
 ---
 
@@ -51,19 +51,19 @@ python3 main.py
 
 ```bash
 # Service systemd
-sudo cp ytcut.service /etc/systemd/system/
-sudo systemctl enable --now ytcut
+sudo cp yestubers.service /etc/systemd/system/
+sudo systemctl enable --now yestubers
 
 # Nginx reverse proxy
-sudo cp ytcut.nginx /etc/nginx/sites-available/ytcut
-sudo ln -s /etc/nginx/sites-available/ytcut /etc/nginx/sites-enabled/
+sudo cp yestubers.nginx /etc/nginx/sites-available/yestubers
+sudo ln -s /etc/nginx/sites-available/yestubers /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ## Points d'accès DNS
 
 ```
-cut.blackbeardai.org → A → IP du VPS
+yestubers.cloud → A → IP du VPS
 ```
 
 Ajouter via API IONOS :
@@ -73,7 +73,7 @@ Ajouter via API IONOS :
 ## Structure
 
 ```
-/opt/ytcut/
+/opt/yestubers/
 ├── main.py              # Application FastAPI (582 lignes)
 ├── static/
 │   ├── css/style.css    # Thème sombre responsive
@@ -85,9 +85,9 @@ Ajouter via API IONOS :
 │   ├── signup.html
 │   └── pricing.html     # Plans + Stripe Checkout
 ├── storage/             # Videos, cuts, thumbnails
-├── ytcut.db             # SQLite (généré au 1er lancement)
-├── ytcut.service        # Systemd unit
-├── ytcut.nginx          # Configuration nginx
+├── yestubers.db             # SQLite (généré au 1er lancement)
+├── yestubers.service        # Systemd unit
+├── yestubers.nginx          # Configuration nginx
 └── README.md
 ```
 

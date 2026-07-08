@@ -1,7 +1,33 @@
+# Python
 __pycache__/
-*.pyc
-storage/
-*.db
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Runtime / local data
 .env
+*.db
+*.db-journal
+storage/
+backups/
+thumbnails/
+videos/
+
+# Media files
 *.mp4
+*.webm
+*.mp3
+*.m4a
+*.wav
+*.3gp
+*.flv
 *.jpg
+*.jpeg
+*.png
+*.svg
+*.ico
+
+# Logs / misc
+*.log
+celerybeat-schedule

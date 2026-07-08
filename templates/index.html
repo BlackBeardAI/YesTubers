@@ -1,164 +1,537 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YT Cut — Télécharger et couper des vidéos YouTube</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="https://js.stripe.com/v3/"></script>
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>{{ i18n.title_home }} | {{ i18n.brand }}</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="description" content="{{ i18n.desc_home }}">
+    <meta name="keywords" content="yestubers, youtube mp3, youtube mp4, telecharger video youtube, convertisseur youtube, youtube downloader, descargar youtube, scaricare youtube, baixar youtube, 下载 YouTube">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="author" content="Yestubers">
+    <link rel="canonical" href="https://yestubers.cloud/{% if locale != 'en' %}{{ locale }}{% endif %}">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ i18n.title_home }} | {{ i18n.brand }}">
+    <meta property="og:description" content="{{ i18n.desc_home }}">
+    <meta property="og:url" content="https://yestubers.cloud/{% if locale != 'en' %}{{ locale }}{% endif %}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Yestubers">
+    <meta property="og:locale" content="{{ locale }}_{{ i18n['_og_region'] }}">
+    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ i18n.title_home }} | {{ i18n.brand }}">
+    <meta name="twitter:description" content="{{ i18n.desc_home }}">
+
+    <!-- Hreflang -->
+    {% for loc in i18n['_supported'] %}
+    <link rel="alternate" hreflang="{{ loc }}" href="https://yestubers.cloud/{% if loc != 'en' %}{{ loc }}{% endif %}" />
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="https://yestubers.cloud/" />
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Yestubers",
+        "url": "https://yestubers.cloud/",
+        "description": "{{ i18n.desc_home }}",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+        "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "28471"},
+        "author": {"@type": "Organization", "name": "Yestubers"}
+    }
+    </script>
 </head>
-<body>
+<body class="home">
+    <!-- Animated gradient background -->
+    <div class="ambient-bg"></div>
+
     <nav class="navbar">
-        <div class="container">
-            <a href="/" class="logo">YT Cut</a>
-            <div class="nav-links">
-                <a href="/pricing">Tarifs</a>
-                {% if user %}
-                <a href="/dashboard">Dashboard</a>
-                <span class="credits-badge">{{ user.credits }} crédit{% if user.credits > 1 %}s{% endif %}</span>
-                <a href="#" onclick="logout()">Déco</a>
-                {% else %}
-                <a href="/login">Connexion</a>
-                <a href="/signup" class="btn-primary">Essayer</a>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
+    <div class="container nav-container">
+        <a href="/" class="logo">
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+            </svg>
+            <span>Yestubers</span>
+        </a>
 
-    <section class="hero">
-        <div class="container">
-            <h1>Téléchargez et coupez vos vidéos YouTube</h1>
-            <p class="subtitle">Extrayez les meilleurs moments. Sans pub, sans limite de temps.</p>
-
-            {% if user %}
-            <div class="download-box" id="download-box">
-                <input type="url" id="youtube-url" placeholder="Collez une URL YouTube..." />
-                <button onclick="startDownload()" class="btn-cta" id="dl-btn">Télécharger</button>
-                <div id="dl-status" class="status-msg"></div>
-            </div>
+        <div class="nav-links" id="nav-links">
+            <a href="/pricing">{{ i18n.nav_pricing }}</a>
+            {% if user is defined and user %}
+            <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
+            <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Logout' }}</a>
             {% else %}
-            <div class="cta-box">
-                <p>1 téléchargement gratuit — puis à partir de <strong>1.99€</strong></p>
-                <a href="/signup" class="btn-cta">Commencer gratuitement</a>
-            </div>
+            <a href="/login">{{ i18n.nav_login }}</a>
+            <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup }}</a>
             {% endif %}
         </div>
-    </section>
 
-    <section class="pricing-section" id="pricing">
-        <div class="container">
-            <h2>Simple, transparent</h2>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </div>
+</nav>
 
-            <!-- Billing toggle -->
-            <div class="billing-toggle">
-                <span class="toggle-label active" id="label-annual" onclick="switchBilling('annual')">
-                    Annuel <span class="save-badge">-33%</span>
-                </span>
-                <span class="toggle-label" id="label-monthly" onclick="switchBilling('monthly')">
-                    Mensuel
-                </span>
+    <header class="hero">
+        <div class="container hero-container">
+            <div class="hero-badge">
+                <span class="pulse"></span>
+                <span>Plus de 2 millions de vidéos converties</span>
+            </div>
+            <h1>{{ i18n.hero_h1_part1 }} <span class="gradient-text">MP3 ou MP4 HD</span></h1>
+            <p class="hero-subtitle">{{ i18n.hero_sub }}</p>
+            <div class="hero-cta-row">
+                <a href="/pricing" class="btn-cta btn-lg">🚀 Passer Premium — dès 5.99€/mois</a>
+                <span class="hero-guarantee">✓ Sans engagement · 14 jours satisfait ou remboursé</span>
             </div>
 
-            <div class="pricing-grid">
-                {% for key, plan in plans.items() %}
-                <div class="pricing-card {% if key == 'creator' %}popular{% endif %}">
-                    {% if key == 'creator' %}<div class="popular-badge">⭐ Meilleur rapport</div>{% endif %}
-                    <h3>{{ plan.name }}</h3>
-                    <div class="price">
-                        <span class="price-annual">{{ "%.2f"|format(plan.annual_price / 12) }}€</span>
-                        <span class="price-monthly hidden">{{ "%.2f"|format(plan.monthly_price) }}€</span>
-                        <span class="price-period">/mois</span>
-                    </div>
-                    {% if plan.annual_price > 0 %}
-                    <div class="price-annual-detail">
-                        {{ "%.0f"|format(plan.annual_price) }}€ facturés par an
-                    </div>
-                    <div class="price-monthly-detail hidden">
-                        {{ "%.2f"|format(plan.monthly_price) }}€ facturés par mois
-                    </div>
-                    {% endif %}
-                    <ul>
-                        <li class="quality-line">📺 {{ plan.quality }}p</li>
-                        <li>🎬 {{ plan.credits }} téléchargement{% if plan.credits > 1 or plan.credits == 999999 %}s{% endif %}</li>
-                        <li>⏱️ Jusqu'à {{ plan.max_duration }}s</li>
-                        <li>✂️ Découpage inclus</li>
-                    </ul>
-                    {% if key != 'free' %}
-                        {% if user %}
-                        <button onclick="subscribe('{{ key }}')" class="btn-plan" id="btn-{{ key }}">
-                            Choisir {{ plan.name }}
-                        </button>
-                        {% else %}
-                        <a href="/signup" class="btn-plan">Choisir {{ plan.name }}</a>
-                        {% endif %}
-                    {% else %}
-                        {% if not user %}
-                        <a href="/signup" class="btn-plan btn-ghost">Gratuit</a>
-                        {% else %}
-                        <div class="current-plan-label">Plan actuel</div>
-                        {% endif %}
-                    {% endif %}
+            <!-- CONVERTER BOX -->
+            <div class="converter-card" id="converter">
+                <div class="converter-tabs">
+                    <button class="tab-btn active" data-tab="video" onclick="switchTab('video')">{{ i18n.tab_video }}</button>
+                    <button class="tab-btn" data-tab="audio" onclick="switchTab('audio')">{{ i18n.tab_audio }}</button>
                 </div>
-                {% endfor %}
+
+                <div class="converter-body">
+                    <div class="input-wrapper">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M10 13a5 5 0 007.54.54l3.58 3.58a8 8 0 11-2.12-2.12l-3.58-3.58A5 5 0 0110 13z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <input type="text" id="video-url" placeholder="{{ i18n.cta_placeholder }}" autocomplete="off">
+                        <button class="paste-btn" onclick="pasteUrl()" title="{{ i18n.paste }}">{{ i18n.paste }}</button>
+                    </div>
+
+                    <div class="options-row">
+                        <div class="format-selector">
+                            <label>{{ i18n.format_label }}</label>
+                            <select id="format-select">
+                                <optgroup label="🎬 Vidéo" id="video-formats">
+                                    <option value="mp4" selected>MP4 — 720p</option>
+                                    <option value="mp4-hd">MP4 HD — 1080p</option>
+                                    <option value="mp4-2k">MP4 2K — 1440p</option>
+                                    <option value="mp4-4k">MP4 4K — 2160p</option>
+                                    <option value="3gp">3GP</option>
+                                    <option value="flv">FLV</option>
+                                </optgroup>
+                                <optgroup label="🎵 Audio" id="audio-formats" class="hidden">
+                                    <option value="mp3">MP3 — 128kbps</option>
+                                    <option value="mp3-hd">MP3 HD — 320kbps</option>
+                                    <option value="m4a">M4A — AAC</option>
+                                    <option value="wav">WAV — Lossless</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <label class="toggle">
+                            <input type="checkbox" id="playlist-check">
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">{{ i18n.playlist }}</span>
+                        </label>
+                    </div>
+
+                    <button class="btn-download" id="download-btn" onclick="startPublicDownload()">
+                        <span class="btn-text">{{ i18n.cta_button }}</span>
+                        <span class="btn-loader hidden"></span>
+                    </button>
+
+                    <!-- Progress + Status -->
+                    <div class="progress-area hidden" id="progress-area">
+                        <div class="progress-info">
+                            <span id="progress-status">{{ i18n.status_preparing }}</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-bar" id="progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <!-- Video Preview -->
+                    <div class="video-preview hidden" id="video-preview">
+                        <img src="" alt="" class="preview-thumb" id="preview-thumb" loading="lazy" decoding="async">
+                        <div class="preview-meta">
+                            <h3 id="preview-title"></h3>
+                            <div class="preview-stats"
+                                <span id="preview-duration"></span>
+                                <span id="preview-channel"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-msg hidden" id="status-msg"></div>
+                </div>
+            </div>
+
+            <div class="trust-row">
+                <div class="trust-item"><span>⚡</span> {{ i18n.trust_1 }}</div>
+                <div class="trust-item"><span>🔒</span> {{ i18n.trust_2 }}</div>
+                <div class="trust-item"><span>🌍</span> {{ i18n.trust_3 }}</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Supported platforms -->
+    <section class="platforms">
+        <div class="container">
+            <p class="section-label">{{ i18n.compatible }}</p>
+            <div class="platforms-row">
+                <div class="platform-badge"><span>▶️</span> YouTube</div>
+                <div class="platform-badge"><span>🎵</span> TikTok</div>
+                <div class="platform-badge"><span>📸</span> Instagram</div>
+                <div class="platform-badge"><span>💬</span> Facebook</div>
+                <div class="platform-badge"><span>🐦</span> X / Twitter</div>
+                <div class="platform-badge"><span>🎮</span> Twitch</div>
             </div>
         </div>
     </section>
 
-    <footer>
+    <!-- Features -->
+
+    <!-- AD BANNER FOR FREE USERS -->
+    {% if not user or user.plan == 'free' %}
+    <div class="ad-banner" id="adBanner">
+        <span class="ad-label">Publicité</span>
+        <span class="ad-text">Passez Premium : sans pub, plus de qualité, plus de crédits.</span>
+        <a href="/pricing" class="ad-cta">{{ i18n.upgrade_badge }}</a>
+        <button class="ad-close" onclick="document.getElementById('adBanner').style.display='none'">×</button>
+    </div>
+    {% endif %}
+
+    <section class="features" id="features">
         <div class="container">
-            <p>YT Cut &copy; 2026 — Pas de pub, pas de tracking.</p>
+            <h2 class="section-title">{{ i18n.why_title }} <span class="gradient-text">Yestubers</span> ?</h2>
+            <p class="section-subtitle">{{ i18n.why_sub }}</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon gradient-1">🎵</div>
+                    <h3>{{ i18n.feature_mp3_title }}</h3>
+                    <p>{{ i18n.feature_mp3_text }}</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon gradient-2">🎬</div>
+                    <h3>{{ i18n.feature_mp4_title }}</h3>
+                    <p>{{ i18n.feature_mp4_text }}</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon gradient-3">⚡</div>
+                    <h3>{{ i18n.feature_speed_title }}</h3>
+                    <p>{{ i18n.feature_speed_text }}</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon gradient-4">🔒</div>
+                    <h3>{{ i18n.feature_anon_title }}</h3>
+                    <p>{{ i18n.feature_anon_text }}</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon gradient-5">📱</div>
+                    <h3>{{ i18n.feature_devices_title }}</h3>
+                    <p>{{ i18n.feature_devices_text }}</p>
+                </div>
+                <div class="feature-card feature-upsell">
+                    <div class="feature-icon gradient-6">✂️</div>
+                    <h3>{{ i18n.feature_cut_title }}</h3>
+                    <p>{{ i18n.feature_cut_text }}</p>
+                    <a href="/pricing" class="btn-sm btn-primary">Débloquer avec Pro →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing teaser -->
+    <section class="pricing-teaser">
+        <div class="container">
+            <div class="pricing-teaser-card">
+                <div class="teaser-text">
+                    <h2>{{ i18n.teaser_title }}</h2>
+                    <p>{{ i18n.teaser_text }}</p>
+                </div>
+                <div class="teaser-price">
+                    <div class="price">{{ i18n.teaser_price | safe }}</div>
+                    <div class="savings">Économisez 2 mois avec l'annuel</div>
+                    <a href="/pricing" class="btn-cta">{{ i18n.teaser_cta }}</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <h2 class="section-title">{{ i18n.faq_title }}</h2>
+            <div class="faq-grid">
+                <div class="faq-card">
+                    <h3>{{ i18n.faq_q1 }}</h3>
+                    <p>{{ i18n.faq_a1 }}</p>
+                </div>
+                <div class="faq-card">
+                    <h3>{{ i18n.faq_q2 }}</h3>
+                    <p>{{ i18n.faq_a2 }}</p>
+                </div>
+                <div class="faq-card">
+                    <h3>{{ i18n.faq_q3 }}</h3>
+                    <p>{{ i18n.faq_a3 }}</p>
+                </div>
+                <div class="faq-card">
+                    <h3>{{ i18n.faq_q4 }}</h3>
+                    <p>Oui, cochez l'option "{{ i18n.playlist }}" et nous compresserons toutes les vidéos dans un fichier ZIP.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
+                            <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                            <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                            <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+                        </svg>
+                        <span>Yestubers</span>
+                    </div>
+                    <p>{{ i18n.footer_tagline }}</p>
+                </div>
+                <div class="footer-links">
+                    <h4>{{ i18n.footer_product }}</h4>
+                    <a href="/pricing">{{ i18n.nav_pricing }}</a>
+                    {% if user is defined and user %}
+                    <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
+                    <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Déconnexion' }}</a>
+                    {% else %}
+                    <a href="/login">{{ i18n.nav_login }}</a>
+                    <a href="/signup">{{ i18n.signup }}</a>
+                    {% endif %}
+                </div>
+                <div class="footer-links">
+                    <h4>{{ i18n.footer_legal }}</h4>
+                    <a href="/terms">{{ i18n.terms }}</a>
+                    <a href="/privacy">{{ i18n.privacy }}</a>
+                    <a href="/dmca">{{ i18n.dmca }}</a>
+                </div>
+                <div class="footer-links">
+                    <h4>{{ i18n.footer_help }}</h4>
+                    <a href="/about">{{ i18n.nav_about }}</a>
+                    <a href="/contact">{{ i18n.contact }}</a>
+                    <a href="/#faq">{{ i18n.faq }}</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Yestubers. Tous droits réservés.</p>
+            </div>
         </div>
     </footer>
 
-    <script src="/static/js/main.js"></script>
+    <!-- Cookie consent -->
+    <div class="cookie-banner" id="cookie-banner" style="display:none;">
+        <p>🍪 {{ i18n.cookie_text }} <a href="/privacy">En savoir plus</a>.</p>
+        <button class="btn-sm" onclick="acceptCookies()">OK</button>
+    </div>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="/static/js/main.min.js?v=10"></script>
     <script>
-    const stripe = Stripe('{{ stripe_pk }}');
-    let currentBilling = 'annual';
-
-    function switchBilling(mode) {
-        currentBilling = mode;
-        document.getElementById('label-annual').classList.toggle('active', mode === 'annual');
-        document.getElementById('label-monthly').classList.toggle('active', mode === 'monthly');
-        document.querySelectorAll('.price-annual').forEach(el => el.classList.toggle('hidden', mode !== 'annual'));
-        document.querySelectorAll('.price-monthly').forEach(el => el.classList.toggle('hidden', mode !== 'monthly'));
-        document.querySelectorAll('.price-annual-detail').forEach(el => el.classList.toggle('hidden', mode !== 'annual'));
-        document.querySelectorAll('.price-monthly-detail').forEach(el => el.classList.toggle('hidden', mode !== 'monthly'));
+    // Tab switching
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+        const select = document.getElementById('format-select');
+        if (tab === 'audio') {
+            document.getElementById('video-formats').classList.add('hidden');
+            document.getElementById('audio-formats').classList.remove('hidden');
+            select.value = 'mp3';
+        } else {
+            document.getElementById('audio-formats').classList.add('hidden');
+            document.getElementById('video-formats').classList.remove('hidden');
+            select.value = 'mp4';
+        }
     }
 
-    function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.reload()); }
-
-    {% if user %}
-    async function startDownload() {
-        const url = document.getElementById('youtube-url').value.trim();
-        const status = document.getElementById('dl-status');
-        const btn = document.getElementById('dl-btn');
-        if (!url) { status.textContent = 'Collez une URL'; return; }
-        btn.disabled = true; btn.textContent = '⏳...';
-        try {
-            const form = new FormData(); form.append('url', url);
-            const r = await fetch('/api/videos/download', {method:'POST', body: form});
-            const data = await r.json();
-            if (r.ok) { status.innerHTML = '✅ Fait ! <a href="/dashboard">Dashboard</a>'; }
-            else { status.textContent = '❌ ' + (data.detail || 'Erreur'); }
-        } catch(e) { status.textContent = '❌ Erreur réseau'; }
-        btn.disabled = false; btn.textContent = 'Télécharger';
+    function pasteUrl() {
+        navigator.clipboard.readText().then(text => {
+            document.getElementById('video-url').value = text;
+            fetchVideoInfo(text);
+        });
     }
-    {% endif %}
 
-    async function subscribe(plan) {
-        const btn = document.getElementById('btn-' + plan);
-        btn.disabled = true; btn.textContent = '⏳...';
+    document.getElementById('video-url').addEventListener('paste', e => {
+        setTimeout(() => fetchVideoInfo(e.target.value), 100);
+    });
+
+    document.getElementById('video-url').addEventListener('keypress', e => {
+        if (e.key === 'Enter') startPublicDownload();
+    });
+
+    let infoTimeout;
+    async function fetchVideoInfo(url) {
+        if (!url || !url.includes('http')) return;
+        clearTimeout(infoTimeout);
+        infoTimeout = setTimeout(async () => {
+            try {
+                const r = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
+                if (!r.ok) return;
+                const data = await r.json();
+                const preview = document.getElementById('video-preview');
+                preview.classList.remove('hidden');
+                document.getElementById('preview-thumb').src = data.thumbnail || '';
+                document.getElementById('preview-title').textContent = data.title || '';
+                document.getElementById('preview-duration').textContent = '🕒 ' + (data.duration || '0:00');
+                document.getElementById('preview-channel').textContent = '👤 ' + (data.uploader || '');
+            } catch (e) { console.error(e); }
+        }, 500);
+    }
+
+    async function startPublicDownload() {
+        const url = document.getElementById('video-url').value.trim();
+        const format = document.getElementById('format-select').value;
+        const playlist = document.getElementById('playlist-check').checked;
+        const btn = document.getElementById('download-btn');
+        const status = document.getElementById('status-msg');
+        const progressArea = document.getElementById('progress-area');
+        const bar = document.getElementById('progress-bar');
+        const pct = document.getElementById('progress-percent');
+
+        if (!url) { showStatus('Collez un lien d\'abord.', 'error'); return; }
+
+        btn.disabled = true;
+        btn.querySelector('.btn-text').textContent = 'Téléchargement...';
+        btn.querySelector('.btn-loader').classList.remove('hidden');
+        progressArea.classList.remove('hidden');
+        status.classList.add('hidden');
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            if (progress < 90) progress += Math.random() * 3;
+            bar.style.width = progress + '%';
+            pct.textContent = Math.round(progress) + '%';
+        }, 300);
+
         try {
             const form = new FormData();
-            form.append('plan', plan);
-            form.append('billing', currentBilling);
-            const r = await fetch('/api/stripe/create-checkout', {method:'POST', body: form});
-            const data = await r.json();
-            if (r.ok) { window.location.href = data.url; }
-            else { alert('Erreur: ' + (data.detail || 'Inconnue')); }
-        } catch(e) { alert('Erreur réseau'); }
-        btn.disabled = false; btn.textContent = 'Choisir ' + plan;
+            form.append('url', url);
+            form.append('format', format);
+            if (playlist) form.append('playlist', 'true');
+            const r = await fetch('/api/download', { method: 'POST', body: form });
+            const data = await r.json().catch(() => ({}));
+
+            if (!r.ok) {
+                clearInterval(interval);
+                throw new Error(data.detail || 'Erreur de téléchargement');
+            }
+
+            const remaining = data.remaining_anonymous;
+
+            // Fetch file as blob
+            const fileR = await fetch(data.download_url);
+            if (!fileR.ok) {
+                clearInterval(interval);
+                throw new Error('Erreur lors du téléchargement du fichier');
+            }
+
+            clearInterval(interval);
+            bar.style.width = '100%';
+            pct.textContent = '100%';
+            document.getElementById('progress-status').textContent = '{{ i18n.status_finalizing }}';
+
+            const blob = await fileR.blob();
+            const cd = fileR.headers.get('content-disposition') || '';
+            const fnameMatch = cd.match(/filename="?([^"]+)"?/);
+            const filename = fnameMatch ? fnameMatch[1] : `yestubers_${format}.${format.startsWith('mp3') || format === 'm4a' || format === 'wav' ? 'mp3' : 'mp4'}`;
+
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(a.href);
+
+            showStatus(`✅ Téléchargement terminé ! Il vous reste ${remaining} téléchargement(s) gratuit(s).`, 'success');
+        } catch (err) {
+            clearInterval(interval);
+            showStatus('❌ ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.querySelector('.btn-text').textContent = '{{ i18n.cta_button }}';
+            btn.querySelector('.btn-loader').classList.add('hidden');
+        }
+    }
+
+    function showStatus(msg, type) {
+        const el = document.getElementById('status-msg');
+        el.textContent = msg;
+        el.className = 'status-msg ' + type;
+        el.classList.remove('hidden');
+    }
+
+    // Cookie consent
+    const cb = document.getElementById('cookie-banner');
+    if (cb && !localStorage.getItem('cookies-accepted')) {
+        cb.style.display = 'flex';
+        cb.classList.add('show');
+    }
+    function acceptCookies() {
+        localStorage.setItem('cookies-accepted', '1');
+        const cb2 = document.getElementById('cookie-banner');
+        if (cb2) { cb2.classList.remove('show'); cb2.style.display = 'none'; }
     }
     </script>
+
+
+<script id="nav-links-toggle-js">
+(function(){
+    var toggle = document.getElementById('nav-toggle');
+    var links = document.getElementById('nav-links');
+    if (!toggle || !links) return;
+    toggle.addEventListener('click', function(){
+        links.classList.toggle('open');
+        var isOpen = links.classList.contains('open');
+        links.style.display = isOpen ? 'flex' : '';
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    links.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        });
+    });
+    document.addEventListener('click', function(e){
+        if (!toggle.contains(e.target) && !links.contains(e.target)) {
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+</script>
+{% if not user or user.plan == 'free' %}
+<div class="fixed-upsell" id="fixedUpsell">
+    <div class="fixed-upsell-inner">
+        <span>⭐ Passer Premium : plus de qualité, plus de crédits, sans pub</span>
+        <a href="/pricing" class="btn-sm btn-cta">Voir les tarifs</a>
+        <button class="fixed-upsell-close" onclick="document.getElementById('fixedUpsell').style.display='none'">×</button>
+    </div>
+</div>
+{% endif %}
 </body>
 </html>

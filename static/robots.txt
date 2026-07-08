@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /login
+Disallow: /signup
+Disallow: /reset
+Disallow: /settings
+Disallow: /admin
+Sitemap: https://yestubers.cloud/sitemap.xml
+Host: https://yestubers.cloud

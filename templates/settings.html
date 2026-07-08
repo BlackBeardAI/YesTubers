@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>Paramètres — Yestubers</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="/static/css/style.css?v=10">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                    <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                    <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+                </svg>
+                <span>Yestubers</span>
+            </a>
+            <div class="nav-links" id="nav-links">
+                <a href="/">Accueil</a>
+                <a href="/pricing">Tarifs</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/settings" class="active">Paramètres</a>
+                <span class="credits-badge">{{ user.credits }} crédit{% if user.credits > 1 or user.credits == 999999 %}s{% endif %}</span>
+                <a href="#" onclick="logout(); return false;">Déconnexion</a>
+            </div>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <div class="dashboard-header">
+                <div>
+                    <h1>Paramètres du compte</h1>
+                    <p class="dashboard-subtitle">{{ user.email }}</p>
+                </div>
+            </div>
+
+            <div class="settings-grid">
+                <!-- Profile -->
+                <div class="settings-card">
+                    <h2>👤 Profil</h2>
+                    <form id="profile-form" onsubmit="updateProfile(event)">
+                        <label>Email</label>
+                        <input type="email" id="profile-email" value="{{ user.email }}" disabled />
+                        <p class="hint">L'email ne peut pas être modifié.</p>
+
+                        <label>Nouveau mot de passe</label>
+                        <input type="password" id="new-pw" placeholder="Laisser vide pour ne pas changer" minlength="8" />
+                        <div id="profile-status" class="status-msg"></div>
+                        <button type="submit" class="btn-cta" id="profile-btn">Mettre à jour</button>
+                    </form>
+                </div>
+
+                <!-- API Key -->
+                <div class="settings-card">
+                    <h2>🔑 Clé API</h2>
+                    <p class="hint">Utilisez cette clé pour accéder à l'API Yestubers.</p>
+                    <div class="api-key-box">
+                        <code id="api-key">{{ user.api_key }}</code>
+                        <button onclick="copyApiKey()" class="btn-sm">📋 Copier</button>
+                    </div>
+                    <button onclick="regenerateApiKey()" class="btn-sm btn-danger" style="margin-top:12px;">🔄 Régénérer</button>
+                </div>
+
+                <!-- Plan -->
+                <div class="settings-card">
+                    <h2>💳 Abonnement</h2>
+                    <div class="plan-info">
+                        <span class="plan-badge plan-{{ user.plan }}">{{ plans[user.plan].name }}</span>
+                        <span>{{ user.credits }} crédits restants</span>
+                    </div>
+                    {% if user.plan == 'free' %}
+                    <a href="/pricing" class="btn-cta" style="margin-top:16px;display:inline-flex;">Passer Premium</a>
+                    {% else %}
+                    <p class="hint">Pour modifier ou annuler votre abonnement, utilisez le portail Stripe.</p>
+                    <button onclick="billingPortal()" class="btn-secondary" style="margin-top:12px;">Gérer mon abonnement</button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.href='/'); }
+    async function updateProfile(e) {
+        e.preventDefault();
+        const btn = document.getElementById('profile-btn');
+        const status = document.getElementById('profile-status');
+        const pw = document.getElementById('new-pw').value;
+        if (!pw) return;
+        btn.disabled = true; btn.textContent = 'Mise à jour...';
+        try {
+            const r = await fetch('/api/auth/profile', {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({password:pw})});
+            const data = await r.json();
+            status.className = 'status-msg ' + (r.ok ? 'success' : 'error');
+            status.textContent = data.message || (r.ok ? 'Mot de passe mis à jour' : 'Erreur');
+            if (r.ok) document.getElementById('new-pw').value = '';
+        } catch(e) { status.className='status-msg error'; status.textContent='Erreur réseau'; }
+        btn.disabled = false; btn.textContent = 'Mettre à jour';
+    }
+    function copyApiKey() {
+        const key = document.getElementById('api-key').textContent;
+        navigator.clipboard.writeText(key).then(() => alert('Clé API copiée'));
+    }
+    async function regenerateApiKey() {
+        if (!confirm('Régénérer la clé API ? L\'ancienne sera invalide.')) return;
+        const r = await fetch('/api/auth/api-key', {method:'POST'});
+        const data = await r.json();
+        if (r.ok) document.getElementById('api-key').textContent = data.api_key;
+    }
+    async function billingPortal() {
+        const r = await fetch('/api/stripe/portal', {method:'POST'});
+        const data = await r.json();
+        if (data.url) location.href = data.url;
+    }
+    </script>
+
+    <script id="nav-links-toggle-js">
+    (function(){
+        var toggle = document.getElementById('nav-toggle');
+        var links = document.getElementById('nav-links');
+        if (!toggle || !links) return;
+        toggle.addEventListener('click', function(){
+            var open = links.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        links.querySelectorAll('a').forEach(function(a){
+            a.addEventListener('click', function(){
+                links.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+        document.addEventListener('click', function(e){
+            if (!toggle.contains(e.target) && !links.contains(e.target)) {
+                links.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

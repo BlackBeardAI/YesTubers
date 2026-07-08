@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>Admin — Yestubers</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="stylesheet" href="/static/css/style.css?v=10">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                    <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                    <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+                </svg>
+                <span>Yestubers <span style="color:var(--primary);font-size:0.7rem;">ADMIN</span></span>
+            </a>
+            <div class="nav-links" id="nav-links">
+                <a href="/">Accueil</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/admin" class="active">Admin</a>
+                <a href="/settings">Paramètres</a>
+                <a href="#" onclick="logout(); return false;">Déconnexion</a>
+            </div>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="dashboard-main">
+        <div class="container">
+            <div class="dashboard-header">
+                <div>
+                    <h1>🛡️ Panneau d'administration</h1>
+                    <p class="dashboard-subtitle">Vue d'ensemble de la plateforme</p>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ total_users }}</span>
+                        <span class="stat-label">Utilisateurs</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎬</div>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ total_videos }}</span>
+                        <span class="stat-label">Vidéos</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✂️</div>
+                    <div class="stat-content">
+                        <span class="stat-value">{{ total_cuts }}</span>
+                        <span class="stat-label">Extraits</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🆓</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="free-count">—</span>
+                        <span class="stat-label">Gratuits</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💎</div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="paid-count">—</span>
+                        <span class="stat-label">Payants</span>
+                    </div>
+                </div>
+            </div>
+
+            <section class="dash-section">
+                <div class="section-heading">
+                    <h2>Derniers utilisateurs</h2>
+                </div>
+                <div class="admin-table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Plan</th>
+                                <th>Crédits</th>
+                                <th>Inscription</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>{{ u.email }}</td>
+                                <td><span class="plan-badge plan-{{ u.plan }}">{{ plans[u.plan].name }}</span></td>
+                                <td>{{ u.credits }}</td>
+                                <td>{{ u.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="/static/js/main.min.js?v=10"></script>
+    <script>
+    function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.href='/'); }
+
+    async function loadStats() {
+        try {
+            const r = await fetch('/api/admin/stats');
+            const data = await r.json();
+            document.getElementById('free-count').textContent = data.free_users;
+            document.getElementById('paid-count').textContent = data.paid_users;
+        } catch(e) {}
+    }
+    loadStats();
+    </script>
+
+    <script id="nav-links-toggle-js">
+    (function(){
+        var toggle = document.getElementById('nav-toggle');
+        var links = document.getElementById('nav-links');
+        if (!toggle || !links) return;
+        toggle.addEventListener('click', function(){
+            var open = links.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        links.querySelectorAll('a').forEach(function(a){
+            a.addEventListener('click', function(){
+                links.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            });
+        });
+        document.addEventListener('click', function(e){
+            if (!toggle.contains(e.target) && !links.contains(e.target)) {
+                links.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

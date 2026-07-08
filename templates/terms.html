@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>Conditions Générales d'Utilisation — Yestubers</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="description" content="Conditions générales d'utilisation de Yestubers, le convertisseur YouTube MP3/MP4 gratuit.">
+
+    <meta property="og:title" content="Conditions Générales d'Utilisation">
+    <meta property="og:description" content="Conditions générales d'utilisation de Yestubers, le convertisseur YouTube MP3/MP4 gratuit.">
+    <meta property="og:url" content="https://yestubers.cloud/terms">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Yestubers">
+    <meta property="og:locale" content="{{ locale }}_{{ i18n['_og_region'] }}">
+    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Conditions Générales d'Utilisation">
+    <meta name="twitter:description" content="Conditions générales d'utilisation de Yestubers, le convertisseur YouTube MP3/MP4 gratuit.">
+    <meta name="twitter:image" content="https://yestubers.cloud/static/og-image.png"><meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yestubers.cloud/terms">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Yestubers",
+        "url": "https://yestubers.cloud/",
+        "logo": "https://yestubers.cloud/static/favicon.svg",
+        "sameAs": [],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "contact@yestubers.cloud",
+            "contactType": "customer support"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Yestubers",
+        "url": "https://yestubers.cloud/",
+        "description": "Convertisseur YouTube MP3/MP4 gratuit et rapide.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+        "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "1250"},
+        "author": {"@type": "Organization", "name": "Yestubers"}
+    }
+    </script>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <nav class="navbar">
+    <div class="container nav-container">
+        <a href="/" class="logo">
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+            </svg>
+            <span>Yestubers</span>
+        </a>
+
+        <div class="nav-links" id="nav-links">
+            <a href="/pricing">{{ i18n.nav_pricing if 'nav_pricing' in i18n else 'Pricing' }}</a>
+            {% if user is defined and user %}
+            <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
+            <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Logout' }}</a>
+            {% else %}
+            <a href="/login">{{ i18n.nav_login if 'nav_login' in i18n else 'Login' }}</a>
+            <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup if 'nav_signup' in i18n else 'Try free' }}</a>
+            {% endif %}
+        </div>
+
+        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </div>
+</nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>Conditions Générales d'<span class="gradient-text">Utilisation</span></h1>
+            <p>Dernière mise à jour : 6 juillet 2026</p>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="container">
+            <div class="content-card">
+                <h2>1. Acceptation des conditions</h2>
+                <p>En utilisant Yestubers, vous acceptez les présentes conditions. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser le service.</p>
+
+                <h2>2. Description du service</h2>
+                <p>Yestubers est un convertisseur en ligne permettant de télécharger des vidéos depuis des plateformes publiques (YouTube, TikTok, Instagram, etc.) dans différents formats (MP3, MP4, etc.).</p>
+
+                <h2>3. Utilisation autorisée</h2>
+                <p>Vous vous engagez à :</p>
+                <ul>
+                    <li>Utiliser le service uniquement pour du contenu dont vous détenez les droits ou qui est dans le domaine public.</li>
+                    <li>Respecter les droits d'auteur et les conditions d'utilisation des plateformes sources.</li>
+                    <li>Ne pas utiliser le service pour du téléchargement massif ou automatisé.</li>
+                    <li>Ne pas contourner les limitations techniques du service.</li>
+                </ul>
+
+                <h2>4. Propriété intellectuelle</h2>
+                <p>Yestubers ne revendique aucun droit sur le contenu téléchargé via le service. Les utilisateurs sont seuls responsables de s'assurer qu'ils disposent des droits nécessaires.</p>
+
+                <h2>5. Limitation de responsabilité</h2>
+                <p>Yestubers est fourni "tel quel". Nous ne garantissons pas la disponibilité continue du service et déclinons toute responsabilité pour les dommages directs ou indirects liés à l'utilisation du service.</p>
+
+                <h2>6. Résiliation</h2>
+                <p>Nous nous réservons le droit de suspendre ou résilier l'accès au service en cas de violation des présentes conditions.</p>
+
+                <h2>7. Contact</h2>
+                <p>Pour toute question : <a href="mailto:contact@yestubers.cloud">contact@yestubers.cloud</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo"><span>Yestubers</span></div>
+                    <p>Le convertisseur vidéo simple, rapide et respectueux de votre vie privée.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Produit</h4>
+                    <a href="/pricing">Tarifs</a>
+                    {% if user is defined and user %}
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="#" onclick="logout(); return false;">Déconnexion</a>
+                    {% else %}
+                    <a href="/login">Connexion</a>
+                    <a href="/signup">Inscription</a>
+                    {% endif %}
+                </div>
+                <div class="footer-links">
+                    <h4>Légal</h4>
+                    <a href="/terms">CGU</a>
+                    <a href="/privacy">Confidentialité</a>
+                    <a href="/dmca">DMCA</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Aide</h4>
+                    <a href="/about">À propos</a>
+                    <a href="/contact">Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Yestubers. Tous droits réservés.</p></div>
+        </div>
+    </footer>
+
+
+<script id="nav-links-toggle-js">
+(function(){
+    var toggle = document.getElementById('nav-toggle');
+    var links = document.getElementById('nav-links');
+    if (!toggle || !links) return;
+    toggle.addEventListener('click', function(){
+        var open = links.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    links.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        });
+    });
+    document.addEventListener('click', function(e){
+        if (!toggle.contains(e.target) && !links.contains(e.target)) {
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+</script>
+</body>
+</html>

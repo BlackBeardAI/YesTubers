@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>À propos — Yestubers</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="description" content="Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.">
+
+    <meta property="og:title" content="À propos">
+    <meta property="og:description" content="Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.">
+    <meta property="og:url" content="https://yestubers.cloud/about">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Yestubers">
+    <meta property="og:locale" content="{{ locale }}_{{ i18n['_og_region'] }}">
+    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="À propos">
+    <meta name="twitter:description" content="Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.">
+    <meta name="twitter:image" content="https://yestubers.cloud/static/og-image.png"><meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yestubers.cloud/about">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Yestubers",
+        "url": "https://yestubers.cloud/",
+        "logo": "https://yestubers.cloud/static/favicon.svg",
+        "sameAs": [],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "contact@yestubers.cloud",
+            "contactType": "customer support"
+        }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Yestubers",
+        "url": "https://yestubers.cloud/",
+        "description": "Convertisseur YouTube MP3/MP4 gratuit et rapide.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "All",
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+        "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "1250"},
+        "author": {"@type": "Organization", "name": "Yestubers"}
+    }
+    </script>
+
+    {% for loc in i18n["_supported"] %}
+    <link rel="alternate" hreflang="{{ loc }}" href="https://yestubers.cloud/{% if loc != 'en' %}{{ loc }}/{% endif %}{{ page_path }}" />
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="https://yestubers.cloud/{{ page_path }}" />
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <nav class="navbar">
+    <div class="container nav-container">
+        <a href="/" class="logo">
+            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+            </svg>
+            <span>Yestubers</span>
+        </a>
+
+        <div class="nav-links" id="nav-links">
+            <a href="/pricing">{{ i18n.nav_pricing if 'nav_pricing' in i18n else 'Pricing' }}</a>
+            {% if user is defined and user %}
+            <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
+            <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Logout' }}</a>
+            {% else %}
+            <a href="/login">{{ i18n.nav_login if 'nav_login' in i18n else 'Login' }}</a>
+            <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup if 'nav_signup' in i18n else 'Try free' }}</a>
+            {% endif %}
+        </div>
+
+        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+    </div>
+</nav>
+
+    <section class="page-header">
+        <div class="container">
+            <h1>À propos de <span class="gradient-text">Yestubers</span></h1>
+            <p>Le convertisseur vidéo le plus simple, rapide et respectueux de votre vie privée.</p>
+        </div>
+    </section>
+
+    <section class="content-section">
+        <div class="container">
+            <div class="content-card">
+                <h2>Notre mission</h2>
+                <p>Yestubers est né d'une frustration simple : les convertisseurs YouTube existants sont lents, bourrés de publicités, et imposent des inscriptions inutiles. Nous avons créé la solution la plus rapide pour télécharger des vidéos en ligne — <strong>gratuitement, sans inscription obligatoire, sans publicité intrusive</strong>.</p>
+
+                <h2>Notre technologie</h2>
+                <p>Nous utilisons <strong>yt-dlp</strong>, le moteur de téléchargement le plus puissant au monde, compatible avec plus de 1000 sites. Notre infrastructure de <strong>streaming progressif</strong> permet de recevoir le fichier en temps réel pendant la conversion — pas d'attente, pas de stockage persistant.</p>
+
+                <h2>Chiffres clés</h2>
+                <div class="stats-grid modern">
+                    <div class="stat-card">
+                        <div class="stat-number">+1000</div>
+                        <div class="stat-desc">Sites compatibles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">9</div>
+                        <div class="stat-desc">Formats disponibles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">4K</div>
+                        <div class="stat-desc">Qualité maximale</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">0</div>
+                        <div class="stat-desc">Publicités en accès gratuit</div>
+                    </div>
+                </div>
+
+                <h2>Pourquoi nous choisir ?</h2>
+                <ul>
+                    <li><strong>Gratuit</strong> — 2 téléchargements sans inscription, 3 crédits/mois avec un compte gratuit.</li>
+                    <li><strong>Rapide</strong> — Streaming progressif : recevez le fichier pendant la conversion.</li>
+                    <li><strong>Sécurisé</strong> — Aucun stockage des fichiers, suppression immédiate après téléchargement.</li>
+                    <li><strong>Compatible</strong> — YouTube, TikTok, Instagram, Facebook, X, Twitch et +1000 sites.</li>
+                    <li><strong>Multi-format</strong> — MP3, MP3 HD, M4A, MP4, MP4 HD, MP4 2K, MP4 4K, WAV, 3GP, FLV.</li>
+                    <li><strong>Découpage</strong> — Coupez vos vidéos aux moments exacts (compte premium requis).</li>
+                </ul>
+
+                <h2>Contact</h2>
+                <p>Des questions ? Consultez notre <a href="/contact">page de contact</a> ou écrivez-nous à <a href="mailto:contact@yestubers.cloud">contact@yestubers.cloud</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="logo"><span>Yestubers</span></div>
+                    <p>Le convertisseur vidéo simple, rapide et respectueux de votre vie privée.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Produit</h4>
+                    <a href="/pricing">Tarifs</a>
+                    {% if user is defined and user %}
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="#" onclick="logout(); return false;">Déconnexion</a>
+                    {% else %}
+                    <a href="/login">Connexion</a>
+                    <a href="/signup">Inscription</a>
+                    {% endif %}
+                </div>
+                <div class="footer-links">
+                    <h4>Légal</h4>
+                    <a href="/terms">CGU</a>
+                    <a href="/privacy">Confidentialité</a>
+                    <a href="/dmca">DMCA</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Aide</h4>
+                    <a href="/about">À propos</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/#faq">FAQ</a>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Yestubers. Tous droits réservés.</p></div>
+        </div>
+    </footer>
+
+    <script>
+    function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.href='/'); }
+    </script>
+
+
+<script id="nav-links-toggle-js">
+(function(){
+    var toggle = document.getElementById('nav-toggle');
+    var links = document.getElementById('nav-links');
+    if (!toggle || !links) return;
+    toggle.addEventListener('click', function(){
+        var open = links.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    links.querySelectorAll('a').forEach(function(a){
+        a.addEventListener('click', function(){
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        });
+    });
+    document.addEventListener('click', function(e){
+        if (!toggle.contains(e.target) && !links.contains(e.target)) {
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+</script>
+</body>
+</html>
