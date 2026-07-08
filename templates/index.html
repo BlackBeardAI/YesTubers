@@ -97,6 +97,15 @@
     </div>
 </nav>
 
+{% if anon %}
+<div class="anon-top-banner" id="anonTopBanner">
+    <div class="container banner-inner">
+        <span class="banner-text">🚀 <strong>3 crédits gratuits par mois</strong> — débloquez MP3, HD 1080p et le cutter. <a href="/signup" class="banner-cta">Créer un compte gratuit →</a></span>
+        <button class="banner-close" onclick="document.getElementById('anonTopBanner').style.display='none'" aria-label="Fermer">×</button>
+    </div>
+</div>
+{% endif %}
+
     <header class="hero">
         <div class="container hero-container">
         <div class="hero-badge">
@@ -132,7 +141,7 @@
                             <label>{{ i18n.format_label }}</label>
                             <select id="format-select" onchange="enforceAnonLimits()">
                                 <optgroup label="🎬 Vidéo" id="video-formats">
-                                    <option value="mp4" selected>MP4 — 480p</option>
+                                    <option value="mp4" selected>MP4 — 360p (aperçu){% if anon %} 🔒{% endif %}</option>
                                     {% if not anon %}<option value="mp4-hd">MP4 HD — 720p</option>{% endif %}
                                     {% if not anon %}<option value="mp4-hd1080">MP4 HD — 1080p</option>{% endif %}
                                     {% if not anon %}<option value="mp4-2k">MP4 2K — 1440p</option>{% endif %}
@@ -192,10 +201,10 @@
             <div class="signup-modal" id="signupModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
                 <div class="signup-modal-card" style="background:#11131a; border:1px solid rgba(255,45,85,0.3); border-radius:1rem; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
                     <div style="font-size:2rem; margin-bottom:0.5rem;">🔒</div>
-                    <h2 style="margin:0 0 0.5rem; font-size:1.5rem;">Débloquez tout gratuitement</h2>
+                    <h2 id="signupModalTitle" style="margin:0 0 0.5rem; font-size:1.5rem;">Débloquez tout gratuitement</h2>
                     <p style="color:#a0a0b0; margin-bottom:1.5rem;">
                         Créez un compte gratuit pour obtenir :<br>
-                        <strong>3 crédits par mois · MP3 · HD 1080p · Découpe</strong>
+                        <strong id="signupModalSub">3 crédits par mois · MP3 · HD 1080p · Découpe</strong>
                     </p>
                     <ul style="text-align:left; color:#c8c8d8; font-size:0.95rem; margin:0 0 1.5rem; padding-left:1.2rem;">
                         <li>Télécharger en MP3 / MP4 HD</li>
@@ -531,7 +540,21 @@
             a.remove();
             URL.revokeObjectURL(a.href);
 
-            showStatus(`✅ Téléchargement terminé ! ${isAuthenticated ? 'Crédits restants : ' + remaining : 'Il vous reste ' + remaining + ' téléchargement(s) gratuit(s).'}`, 'success');
+            showStatus(`✅ Téléchargement terminé ! ${isAuthenticated ? 'Crédits restants : ' + remaining : 'Aperçu 360p disponible. Il vous reste ' + remaining + ' téléchargement gratuit cette semaine.'}`, 'success');
+
+            // If anonymous just consumed their free download, push signup immediately
+            if (!isAuthenticated && remaining <= 0) {
+                setTimeout(() => {
+                    const modal = document.getElementById('signupModal');
+                    if (modal) {
+                        const title = document.getElementById('signupModalTitle');
+                        const sub = document.getElementById('signupModalSub');
+                        if (title) title.textContent = 'Votre aperçu gratuit est terminé';
+                        if (sub) sub.textContent = '3 crédits par mois · MP3 · HD 1080p · Découpe';
+                        modal.style.display = 'flex';
+                    }
+                }, 1200);
+            }
         } catch (err) {
             clearInterval(interval);
             showStatus('❌ ' + err.message, 'error');

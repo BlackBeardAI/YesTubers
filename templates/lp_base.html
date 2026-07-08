@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>{{ title }}</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="description" content="{{ description }}">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="author" content="Yestubers">
+    <link rel="canonical" href="https://yestubers.cloud{{ canonical_path }}">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:description" content="{{ description }}">
+    <meta property="og:url" content="https://yestubers.cloud{{ canonical_path }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Yestubers">
+    <meta property="og:locale" content="{{ locale }}_{{ i18n['_og_region'] }}">
+    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ title }}">
+    <meta name="twitter:description" content="{{ description }}">
+    <meta name="twitter:image" content="https://yestubers.cloud/static/og-image.png">
+
+    <!-- Hreflang -->
+    {% for loc in i18n['_supported'] %}
+    <link rel="alternate" hreflang="{{ loc }}" href="https://yestubers.cloud/{% if loc != 'en' %}{{ loc }}{% endif %}{{ canonical_path }}" />
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="https://yestubers.cloud{{ canonical_path }}" />
+
+    <!-- FAQ Schema -->
+    {% if faqs %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {% for faq in faqs %}
+        {
+          "@type": "Question",
+          "name": {{ faq.question | tojson }},
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": {{ faq.answer | tojson }}
+          }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ]
+    }
+    </script>
+    {% endif %}
+
+    <!-- WebApplication Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Yestubers",
+      "url": "https://yestubers.cloud/{{ slug }}",
+      "description": {{ description | tojson }},
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "All",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
+      "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "28471"},
+      "author": {"@type": "Organization", "name": "Yestubers"}
+    }
+    </script>
+
+    <style>
+        .lp-hero { padding: 4rem 0 2rem; text-align: center; }
+        .lp-hero h1 { font-size: 2.6rem; line-height: 1.15; margin-bottom: 1rem; }
+        .lp-hero p { color: #a0a0b0; max-width: 680px; margin: 0 auto 1.5rem; font-size: 1.15rem; }
+        .lp-box { max-width: 760px; margin: 0 auto 3rem; }
+        .lp-content { max-width: 840px; margin: 0 auto; padding: 2rem 1rem; color: #c8c8d8; }
+        .lp-content h2 { color: #fff; margin-top: 2.5rem; font-size: 1.6rem; }
+        .lp-content h3 { color: #fff; margin-top: 1.8rem; font-size: 1.25rem; }
+        .lp-content ul { padding-left: 1.4rem; margin: 1rem 0; }
+        .lp-content li { margin: 0.55rem 0; }
+        .lp-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin: 2rem 0; }
+        .lp-feature { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; padding: 1.4rem; }
+        .lp-feature strong { color: #fff; display: block; margin-bottom: 0.4rem; }
+        .lp-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.5rem 0; }
+        .lp-links a { background: rgba(255,45,85,0.12); color: #ff9aa8; padding: 0.45rem 0.85rem; border-radius: 999px; font-size: 0.9rem; text-decoration: none; }
+        .lp-links a:hover { background: rgba(255,45,85,0.22); }
+        .lp-faq { margin-top: 2rem; }
+        .lp-faq-item { border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1.2rem 0; }
+        .lp-faq-item h3 { margin: 0 0 0.5rem; color: #fff; font-size: 1.15rem; cursor: pointer; }
+        .lp-faq-item p { margin: 0; color: #a0a0b0; }
+    </style>
+</head>
+<body>
+    <div class="ambient-bg"></div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                    <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                    <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+                </svg>
+                <span>Yestubers</span>
+            </a>
+            <div class="nav-links" id="nav-links">
+                <a href="/pricing">{{ i18n.nav_pricing }}</a>
+                <a href="/mp3">MP3</a>
+                <a href="/mp4">MP4</a>
+                <a href="/cut">Cut</a>
+                {% if user is defined and user %}
+                <a href="/dashboard">Dashboard</a>
+                <a href="#" onclick="logout(); return false;">Logout</a>
+                {% else %}
+                <a href="/login">{{ i18n.nav_login }}</a>
+                <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup }}</a>
+                {% endif %}
+            </div>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </nav>
+
+    <header class="lp-hero">
+        <div class="container">
+            <div class="hero-badge"><span class="pulse"></span><span>{{ badge }}</span></div>
+            <h1>{{ h1 }}</h1>
+            <p>{{ subtitle }}</p>
+            <a href="/pricing" class="btn-cta btn-lg">🚀 Passer Premium — dès 5.99€/mois</a>
+        </div>
+    </header>
+
+    <section class="lp-box">
+        <div class="converter-card">
+            <form onsubmit="startLpDownload(event)">
+                <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M10 13a5 5 0 007.54.54l3.58 3.58a8 8 0 11-2.12-2.12l-3.58-3.58A5 5 0 0110 13z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <input type="text" id="lp-url" placeholder="{{ placeholder }}" required autocomplete="off">
+                    <button type="button" class="paste-btn" onclick="pasteLpUrl()">Coller</button>
+                </div>
+                {% if show_cut_options %}
+                <div class="options-row" style="justify-content:center; gap:1rem;">
+                    <label>Début (s) : <input type="number" id="lp-cut-start" value="0" min="0" style="width:80px;"></label>
+                    <label>Fin (s) : <input type="number" id="lp-cut-end" value="60" min="1" style="width:80px;"></label>
+                </div>
+                {% endif %}
+                <button type="submit" class="btn-download" id="lp-btn">
+                    <span class="btn-text">{{ cta }}</span>
+                    <span class="btn-loader hidden"></span>
+                </button>
+                <div class="status-msg hidden" id="lp-status"></div>
+            </form>
+        </div>
+    </section>
+
+    <main class="lp-content">
+        <h2>{{ h2 }}</h2>
+        <p>{{ lead }}</p>
+
+        <div class="lp-features">
+            {% for f in features %}
+            <div class="lp-feature">
+                <strong>{{ f.title }}</strong>
+                <span>{{ f.text }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if steps %}
+        <h3>Comment ça marche en 3 étapes</h3>
+        <ol>
+            {% for step in steps %}
+            <li>{{ step }}</li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+
+        <h3>Pourquoi choisir Yestubers ?</h3>
+        <p>{{ why }}</p>
+
+        {% if related_links %}
+        <div class="lp-links">
+            {% for link in related_links %}
+            <a href="{{ link.url }}">{{ link.label }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <p style="text-align:center; margin: 2.5rem 0;">
+            <a href="/signup" class="btn-cta btn-lg">Créer un compte gratuit — 3 crédits offerts</a>
+        </p>
+
+        {% if faqs %}
+        <section class="lp-faq">
+            <h2>Questions fréquentes</h2>
+            {% for faq in faqs %}
+            <div class="lp-faq-item">
+                <h3>{{ faq.question }}</h3>
+                <p>{{ faq.answer }}</p>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-links">
+                    <h4>Outils</h4>
+                    <a href="/youtube-to-mp3">YouTube MP3</a>
+                    <a href="/youtube-to-mp4">YouTube MP4</a>
+                    <a href="/cut-youtube-video">Couper YouTube</a>
+                    <a href="/download-youtube-video">Télécharger YouTube</a>
+                    <a href="/convert-youtube-mp3">Convertir YouTube MP3</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Produit</h4>
+                    <a href="/pricing">{{ i18n.nav_pricing }}</a>
+                    <a href="/signup">{{ i18n.nav_signup }}</a>
+                    <a href="/login">{{ i18n.nav_login }}</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Légal</h4>
+                    <a href="/terms">{{ i18n.terms }}</a>
+                    <a href="/privacy">{{ i18n.privacy }}</a>
+                    <a href="/dmca">DMCA</a>
+                </div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Yestubers. Tous droits réservés.</p></div>
+        </div>
+    </footer>
+
+    {% if not user %}
+    <div class="signup-modal" id="lpSignupModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
+        <div class="signup-modal-card" style="background:#11131a; border:1px solid rgba(255,45,85,0.3); border-radius:1rem; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div style="font-size:2rem; margin-bottom:0.5rem;">🔒</div>
+            <h2 style="margin:0 0 0.5rem; font-size:1.5rem;">Débloquez {{ cta }} gratuitement</h2>
+            <p style="color:#a0a0b0; margin-bottom:1.5rem;">Créez un compte pour obtenir <strong>3 crédits/mois · MP3 · HD · Découpe</strong>.</p>
+            <a href="/signup" class="btn-cta full-width" style="margin-bottom:0.75rem; display:block;">Créer un compte gratuit →</a>
+            <a href="/pricing" class="btn-secondary" style="display:block; margin-bottom:0.75rem;">Voir les plans Premium</a>
+            <button onclick="document.getElementById('lpSignupModal').style.display='none'" style="background:none; border:none; color:#888; cursor:pointer; font-size:0.9rem;">Continuer avec la version gratuite</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <script>
+    function pasteLpUrl() {
+        navigator.clipboard.readText().then(text => {
+            document.getElementById('lp-url').value = text;
+        }).catch(() => {});
+    }
+    async function startLpDownload(e) {
+        e.preventDefault();
+        const url = document.getElementById('lp-url').value.trim();
+        const status = document.getElementById('lp-status');
+        const btnText = document.querySelector('#lp-btn .btn-text');
+        const loader = document.querySelector('#lp-btn .btn-loader');
+        if (!url) { showLpStatus('Collez un lien YouTube.', 'error'); return; }
+
+        const isAuth = {{ 'true' if user else 'false' }};
+        if (!isAuth) {
+            const modal = document.getElementById('lpSignupModal');
+            if (modal) modal.style.display = 'flex';
+            return;
+        }
+
+        btnText.textContent = 'Traitement...';
+        loader.classList.remove('hidden');
+        status.classList.add('hidden');
+
+        const form = new FormData();
+        form.append('url', url);
+        {% if tool_format == 'mp3' %}
+        form.append('format', 'mp3');
+        form.append('quality', '720');
+        {% elif tool_format == 'mp4' %}
+        form.append('format', 'mp4-hd');
+        form.append('quality', '720');
+        {% else %}
+        form.append('format', 'mp4');
+        form.append('quality', '480');
+        {% endif %}
+
+        {% if show_cut_options %}
+        form.append('start', document.getElementById('lp-cut-start').value);
+        form.append('end', document.getElementById('lp-cut-end').value);
+        {% endif %}
+
+        try {
+            {% if show_cut_options %}
+            const r = await fetch('/api/cut', { method: 'POST', body: form });
+            {% else %}
+            const r = await fetch('/api/videos/download', { method: 'POST', body: form });
+            {% endif %}
+            const data = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(data.detail || 'Erreur');
+            showLpStatus('✅ Prêt ! Redirection vers votre fichier...', 'success');
+            window.location.href = data.download_url;
+        } catch (err) {
+            showLpStatus('❌ ' + err.message, 'error');
+        } finally {
+            btnText.textContent = '{{ cta }}';
+            loader.classList.add('hidden');
+        }
+    }
+    function showLpStatus(msg, type) {
+        const el = document.getElementById('lp-status');
+        el.textContent = msg;
+        el.className = 'status-msg ' + type;
+        el.classList.remove('hidden');
+    }
+    </script>
+    <script src="/static/js/main.min.js?v=10"></script>
+</body>
+</html>

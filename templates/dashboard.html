@@ -104,9 +104,23 @@
         </div>
 
         <!-- Referral -->
-        <section class="dash-card">
-            <h2>🎁 Parrainez vos amis — gagnez 2 crédits par filleul</h2>
-            <p style="color:#a0a0b0; margin-bottom:1rem;">Partagez votre lien. Chaque inscription validée vous rapporte <strong>+2 crédits</strong> (max 1000).</p>
+        <section class="dash-card" id="referral-card">
+            <h2>🎁 Programme de parrainage</h2>
+            <p style="color:#a0a0b0; margin-bottom:1rem;">Parrainez vos amis et gagnez <strong>+3 crédits</strong> chacun. Votre filleul reçoit également <strong>+3 crédits</strong> de bienvenue (max 1000 crédits gagnés).</p>
+            <div class="referral-stats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:1rem; margin-bottom:1rem;">
+                <div class="stat-card" style="padding:0.75rem;">
+                    <span class="stat-value" id="ref-count">0</span>
+                    <span class="stat-label">Filleuls</span>
+                </div>
+                <div class="stat-card" style="padding:0.75rem;">
+                    <span class="stat-value" id="ref-earned">0</span>
+                    <span class="stat-label">Crédits gagnés</span>
+                </div>
+                <div class="stat-card" style="padding:0.75rem;">
+                    <span class="stat-value" id="ref-code" style="font-size:1.1rem; letter-spacing:1px;">{{ user.referral_code or '' }}</span>
+                    <span class="stat-label">Votre code</span>
+                </div>
+            </div>
             <div class="input-wrapper giant" style="max-width:600px;">
                 <input type="text" id="ref-link" value="https://yestubers.cloud/signup?ref={{ user.referral_code or '' }}" readonly />
                 <button type="button" onclick="copyRef()" class="paste-btn">Copier</button>
@@ -423,9 +437,26 @@
         input.select();
         document.execCommand('copy');
         const status = document.getElementById('ref-status');
-        status.textContent = '✅ Lien copié ! Partagez-le pour gagner 2 crédits.';
+        status.textContent = '✅ Lien copié ! Vous et votre filleul gagnerez 3 crédits.';
         status.className = 'status-msg success';
     }
+
+    async function loadReferralStats() {
+        try {
+            const r = await fetch('/api/referral/stats');
+            if (!r.ok) return;
+            const data = await r.json();
+            const codeEl = document.getElementById('ref-code');
+            const linkEl = document.getElementById('ref-link');
+            if (codeEl && data.referral_code) codeEl.textContent = data.referral_code;
+            if (linkEl && data.referral_link) linkEl.value = data.referral_link;
+            const countEl = document.getElementById('ref-count');
+            const earnedEl = document.getElementById('ref-earned');
+            if (countEl) countEl.textContent = data.referrals_count ?? 0;
+            if (earnedEl) earnedEl.textContent = data.earned_credits ?? 0;
+        } catch(e) {}
+    }
+    loadReferralStats();
     </script>
 </body>
 </html>

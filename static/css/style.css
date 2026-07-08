@@ -1688,6 +1688,62 @@ a {
 }
 
 
+/* ─── Anonymous top banner ──────────────────────────────────────────────── */
+.anon-top-banner {
+    position: sticky;
+    top: 0;
+    z-index: 500;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(255,45,85,0.95), rgba(168,85,247,0.95));
+    color: #fff;
+    padding: 10px 0;
+    box-shadow: 0 4px 20px rgba(255,45,85,0.25);
+    backdrop-filter: blur(8px);
+}
+.anon-top-banner .banner-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    text-align: center;
+}
+.anon-top-banner .banner-text {
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+.anon-top-banner .banner-cta {
+    color: #fff;
+    text-decoration: underline;
+    font-weight: 700;
+    margin-left: 4px;
+}
+.anon-top-banner .banner-cta:hover {
+    opacity: 0.9;
+}
+.anon-top-banner .banner-close {
+    background: rgba(0,0,0,0.2);
+    border: none;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    cursor: pointer;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.anon-top-banner .banner-close:hover {
+    background: rgba(0,0,0,0.35);
+}
+@media (max-width: 640px) {
+    .anon-top-banner .banner-inner { padding: 0 12px; }
+    .anon-top-banner .banner-text { font-size: 0.85rem; }
+}
+
 /* ─── Ad banner for free users ─────────────────────────────────────────── */
 .ad-banner {
     max-width: 900px;

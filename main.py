@@ -214,12 +214,13 @@ def _build_plans() -> dict:
 PLANS = _build_plans()
 
 
-# Anonymous daily quota (IP-based) for public /api/download
-# Free anonymous teaser: 1 download/day, 480p max, video only.
+# Anonymous weekly quota (IP-based) for public /api/download
+# Free anonymous teaser: 1 download/week, 360p max, video only, watermarked.
 # Everything else (audio, HD, cutter, more downloads) requires a free account.
-ANON_LIMIT = 1  # downloads per day per IP
-ANON_MAX_QUALITY = "480"
-_anon_counts: dict[str, dict[str, int]] = {}
+ANON_LIMIT = 1  # downloads per 7 days per IP
+ANON_MAX_QUALITY = "360"
+ANON_WINDOW_DAYS = 7
+_anon_counts: dict[str, dict[str, any]] = {}
 
 def _anon_ip(request: Request) -> str:
     xff = request.headers.get("x-forwarded-for", "")
@@ -228,12 +229,18 @@ def _anon_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 def _check_anon_limit(ip: str):
-    today = datetime.utcnow().strftime("%Y-%m-%d")
-    if ip not in _anon_counts or _anon_counts[ip].get("date") != today:
-        _anon_counts[ip] = {"date": today, "count": 0}
+    now = datetime.utcnow()
+    if ip not in _anon_counts or (now - _anon_counts[ip].get("first_seen", now)).days >= ANON_WINDOW_DAYS:
+        _anon_counts[ip] = {"first_seen": now, "count": 0}
     if _anon_counts[ip]["count"] >= ANON_LIMIT:
         raise HTTPException(429, "quota_anon_exceeded")
     _anon_counts[ip]["count"] += 1
+
+def _anon_remaining(ip: str) -> int:
+    now = datetime.utcnow()
+    if ip not in _anon_counts or (now - _anon_counts[ip].get("first_seen", now)).days >= ANON_WINDOW_DAYS:
+        return ANON_LIMIT
+    return max(0, ANON_LIMIT - _anon_counts[ip]["count"])
 
 async def download_public(url: str, fmt: str, quality: str, max_duration: int = 120) -> dict:
     info = get_video_info(url)
@@ -245,25 +252,23 @@ async def download_public(url: str, fmt: str, quality: str, max_duration: int = 
     title = re.sub(r'[^\w\-. ]', '_', info.get("title", "video"))[:50]
 
     fmt = fmt.lower()
-    if fmt in ("mp3", "m4a", "wav"):
-        ext = "mp3" if fmt == "mp3" else ("m4a" if fmt == "m4a" else "wav")
-        out_path = base_path.with_suffix(f".{ext}")
-        audio_format = "mp3" if fmt in ("mp3", "m4a") else "wav"
-        cmd = [
-            "yt-dlp", "--no-playlist", "-x", "--audio-format", audio_format,
-            "--audio-quality", "0", "-o", str(base_path), url
-        ]
-    elif fmt == "mp4":
-        out_path = base_path.with_suffix(".mp4")
-        quality_map = {"sd": "480", "hd": "720", "fullhd": "1080", "2k": "1440", "4k": "2160"}
-        max_height = quality_map.get(quality, quality) if quality not in quality_map.values() else quality
-        cmd = [
-            "yt-dlp", "--no-playlist", "-f",
-            f"best[height<={max_height}][ext=mp4]/best[height<={max_height}]/best",
-            "-o", str(out_path), url
-        ]
-    else:
-        raise Exception(f"Format anonyme non supporté : {fmt}")
+    if fmt != "mp4":
+        raise Exception("Format anonyme non supporté. Créez un compte gratuit pour MP3, HD et plus.")
+    out_path = base_path.with_suffix(".mp4")
+    quality_map = {"sd": "360", "hd": "360", "fullhd": "360", "2k": "360", "4k": "360"}
+    max_height = quality_map.get(quality, quality) if quality not in quality_map.values() else quality
+    # force anonymous ceiling
+    try:
+        h = int(max_height)
+    except ValueError:
+        h = 360
+    if h > 360:
+        max_height = "360"
+    cmd = [
+        "yt-dlp", "--no-playlist", "-f",
+        f"best[height<={max_height}][ext=mp4]/best[height<={max_height}]/best",
+        "-o", str(base_path), url
+    ]
 
     proc = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
     stdout, stderr = await proc.communicate()
@@ -272,13 +277,10 @@ async def download_public(url: str, fmt: str, quality: str, max_duration: int = 
         if "403" in err or "forbidden" in err.lower() or "sign in" in err.lower():
             inv = fetch_invidious(extract_video_id(url))
             if inv:
-                # Public fallback only supports mp4 for simplicity
-                if fmt == "mp4":
-                    quality_map = {"sd": 480, "hd": 720, "fullhd": 1080, "2k": 1440, "4k": 2160}
-                    max_h = quality_map.get(quality, 480) if quality not in ("480","720","1080","1440","2160") else int(quality)
-                    data = await download_invidious(vid_db, inv, max_h)
-                    data["title"] = re.sub(r'[^\w\-. ]', '_', inv.get("title", "video"))[:50]
-                    return data
+                max_h = 360
+                data = await download_invidious(vid_db, inv, max_h)
+                data["title"] = re.sub(r'[^\w\-. ]', '_', inv.get("title", "video"))[:50]
+                return data
         raise Exception(f"Erreur yt-dlp: {err[:200]}")
 
     # Rename if yt-dlp created base path without proper extension
@@ -286,6 +288,25 @@ async def download_public(url: str, fmt: str, quality: str, max_duration: int = 
         candidates = [p for p in VIDEOS.iterdir() if p.stem == vid_db]
         if candidates:
             out_path = candidates[0]
+
+    # Add watermark overlay for anonymous preview
+    if out_path.exists():
+        try:
+            watermarked = out_path.with_stem(out_path.stem + "_wm")
+            overlay_text = "YESTUBERS.FREE.PREVIEW"
+            overlay_cmd = [
+                "ffmpeg", "-y", "-i", str(out_path),
+                "-vf", f"drawtext=text='{overlay_text}':fontcolor=white@0.4:fontsize=24:x=(w-text_w)/2:y=(h-text_h)/2",
+                "-c:a", "copy", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
+                str(watermarked)
+            ]
+            wm_proc = await asyncio.create_subprocess_exec(*overlay_cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            _, _ = await wm_proc.communicate()
+            if wm_proc.returncode == 0 and watermarked.exists():
+                out_path.unlink()
+                out_path = watermarked
+        except Exception:
+            pass
 
     # Cleanup temp anonymous files older than 24h
     now = datetime.utcnow()
@@ -2165,7 +2186,7 @@ class User(Base):
     email_verification_token = Column(String(128), nullable=True)
     email_verification_expires = Column(DateTime, nullable=True)
     referral_code = Column(String(16), unique=True, index=True, nullable=True)
-    referred_by = Column(String(36), ForeignKey("users.id"), nullable=True)
+    referrer_id = Column(String(36), ForeignKey("users.id"), nullable=True)
 
 class Video(Base):
     __tablename__ = "videos"
@@ -2462,9 +2483,51 @@ def cut_video(input_path: Path, start: float, end: float, cut_id: str) -> Path:
 async def robots_txt():
     return FileResponse(str(STATIC_DIR / "robots.txt"), media_type="text/plain")
 
+def _build_sitemap() -> str:
+    """Generate a fresh sitemap.xml including all SEO landing pages."""
+    base = "https://yestubers.cloud"
+    locales = ["fr", "en", "es", "de", "it", "pt", "nl", "pl", "ar", "hi", "ja", "ko", "zh", "ru", "tr"]
+    static_pages = ["pricing", "about", "contact", "terms", "privacy", "dmca"]
+
+    def url_block(path: str, priority: str = "0.8") -> list[str]:
+        lines = [
+            "  <url>",
+            f"    <loc>{base}{path}</loc>",
+            f'    <xhtml:link rel="alternate" hreflang="x-default" href="{base}{path}"/>',
+        ]
+        for loc in locales:
+            lines.append(f'    <xhtml:link rel="alternate" hreflang="{loc}" href="{base}/{loc}{path}"/>')
+        lines.extend([
+            "    <changefreq>weekly</changefreq>",
+            f"    <priority>{priority}</priority>",
+            "  </url>",
+        ])
+        return lines
+
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"', '        xmlns:xhtml="http://www.w3.org/1999/xhtml">']
+
+    # homepage
+    lines.extend(url_block("/", priority="1.0"))
+
+    # static pages
+    for page in static_pages:
+        lines.extend(url_block(f"/{page}", priority="0.6"))
+
+    # legacy SEO pages
+    for tool in SEO_PAGES:
+        lines.extend(url_block(f"/{tool}", priority="0.7"))
+
+    # new high-intent keyword landing pages
+    for slug in LP_PAGES:
+        lines.extend(url_block(f"/{slug}", priority="0.9"))
+
+    lines.append("</urlset>")
+    return "\n".join(lines)
+
+
 @app.get("/sitemap.xml")
 async def sitemap_xml():
-    return FileResponse(str(STATIC_DIR / "sitemap.xml"), media_type="application/xml")
+    return Response(_build_sitemap(), media_type="application/xml")
 
 @app.get("/.well-known/security.txt")
 async def security_txt():
@@ -2742,6 +2805,424 @@ SEO_PAGES = {
     }
 }
 
+# ─── Keyword SEO landing pages ────────────────────────────────────────────────
+
+LP_PAGES: dict[str, dict] = {
+    "youtube-to-mp3": {
+        "template": "lp_base.html",
+        "slug": "youtube-to-mp3",
+        "canonical_path": "/youtube-to-mp3",
+        "title": "YouTube to MP3 — Convertisseur MP3 Gratuit | Yestubers",
+        "description": "Convertissez rapidement des vidéos YouTube en MP3 192 kbps. Gratuit, sans publicité, sans logiciel. 3 crédits offerts à l'inscription.",
+        "h1": "YouTube to MP3",
+        "subtitle": "Extrayez l'audio de n'importe quelle vidéo YouTube en MP3 haute qualité en quelques secondes.",
+        "badge": "MP3 gratuit · 192 kbps · Sans inscription",
+        "placeholder": "Collez un lien YouTube ici...",
+        "cta": "Convertir en MP3",
+        "tool_format": "mp3",
+        "show_cut_options": False,
+        "h2": "Le meilleur convertisseur YouTube to MP3",
+        "lead": "Yestubers transforme vos vidéos YouTube en fichiers MP3 clairs et légers. Idéal pour la musique, les podcasts et les cours en ligne.",
+        "features": [
+            {"title": "MP3 192 kbps", "text": "Qualité audio stéréo optimisée pour tous les appareils."},
+            {"title": "Extraction rapide", "text": "Conversion en ligne sans installation, directement dans le navigateur."},
+            {"title": "Sans publicité", "text": "Interface épurée : collez le lien, cliquez, téléchargez."},
+            {"title": "3 crédits gratuits", "text": "Créez un compte gratuit pour obtenir 3 conversions par mois."},
+        ],
+        "steps": [
+            "Copiez l'URL de la vidéo YouTube.",
+            "Collez le lien dans le champ ci-dessus.",
+            "Cliquez sur « Convertir en MP3 » et récupérez votre fichier.",
+        ],
+        "why": "Contrairement aux outils bourrés de publicités, Yestubers offre une conversion propre, rapide et sécurisée. Les fichiers ne sont pas stockés sur nos serveurs.",
+        "faqs": [
+            {"question": "YouTube to MP3 est-il gratuit ?", "answer": "Oui. Vous pouvez convertir 2 vidéos sans inscription, puis 3 crédits par mois avec un compte gratuit."},
+            {"question": "Quelle est la qualité MP3 ?", "answer": "L'extraction se fait en MP3 192 kbps stéréo, compatible avec tous les lecteurs audio et smartphones."},
+            {"question": "Est-ce légal de convertir YouTube en MP3 ?", "answer": "Vous devez posséder les droits sur le contenu ou utiliser du contenu libre de droits. Yestubers interdit le téléchargement non autorisé de contenus protégés."},
+        ],
+        "related_links": [
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/convert-youtube-mp3", "label": "Convertisseur YouTube MP3"},
+            {"url": "/download-youtube-video", "label": "Télécharger YouTube"},
+            {"url": "/cut-youtube-video", "label": "Couper YouTube"},
+        ],
+    },
+    "youtube-to-mp4": {
+        "template": "lp_base.html",
+        "slug": "youtube-to-mp4",
+        "canonical_path": "/youtube-to-mp4",
+        "title": "YouTube to MP4 — Téléchargement HD Gratuit | Yestubers",
+        "description": "Téléchargez des vidéos YouTube en MP4 HD 720p, 1080p et 4K. Rapide, sécurisé, 3 crédits gratuits avec un compte.",
+        "h1": "YouTube to MP4",
+        "subtitle": "Enregistrez vos vidéos YouTube préférées en MP4 haute définition, prêtes à être lues hors ligne.",
+        "badge": "MP4 HD · 720p · 1080p · 4K",
+        "placeholder": "Collez un lien YouTube ici...",
+        "cta": "Télécharger en MP4",
+        "tool_format": "mp4",
+        "show_cut_options": False,
+        "h2": "Téléchargez YouTube en MP4 en HD",
+        "lead": "Yestubers est l'outil le plus simple pour transformer une URL YouTube en fichier MP4. Choisissez la qualité selon votre plan et profitez d'un téléchargement rapide.",
+        "features": [
+            {"title": "Jusqu'à 4K", "text": "Qualité 480p, 720p, 1080p, 1440p ou 4K selon votre abonnement."},
+            {"title": "MP4 universel", "text": "Compatible TV, smartphone, tablette et montage vidéo."},
+            {"title": "Sans watermark", "text": "Fichier propre, sans logo ni publicité intégrée."},
+            {"title": "Cloud sécurisé", "text": "Accédez à vos téléchargements depuis votre dashboard."},
+        ],
+        "steps": [
+            "Copiez le lien de la vidéo YouTube.",
+            "Collez-le dans le champ de conversion.",
+            "Cliquez sur « Télécharger en MP4 » et choisissez la qualité.",
+        ],
+        "why": "Yestubers garantit un MP4 de qualité originale, sans conversion inutile. Le plan Creator est le plus populaire pour les créateurs de contenu.",
+        "faqs": [
+            {"question": "Puis-je télécharger en 1080p gratuitement ?", "answer": "Le compte gratuit offre 3 crédits par mois en qualité HD 720p. La 1080p et la 4K sont disponibles sur les plans payants."},
+            {"question": "Le fichier MP4 contient-il le son ?", "answer": "Oui, les fichiers MP4 incluent piste vidéo et audio. Vous pouvez aussi extraire l'audio en MP3."},
+            {"question": "Les Shorts sont-ils supportés ?", "answer": "Oui, les liens YouTube Shorts fonctionnent comme les vidéos classiques."},
+        ],
+        "related_links": [
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+            {"url": "/download-youtube-video", "label": "Télécharger YouTube"},
+            {"url": "/cut-youtube-video", "label": "Couper YouTube"},
+            {"url": "/convert-youtube-mp3", "label": "Convertisseur MP3"},
+        ],
+    },
+    "cut-youtube-video": {
+        "template": "lp_base.html",
+        "slug": "cut-youtube-video",
+        "canonical_path": "/cut-youtube-video",
+        "title": "Couper une vidéo YouTube — Découpe MP4 en ligne | Yestubers",
+        "description": "Découpez une vidéo YouTube en extrait court. Définissez début/fin, téléchargez le clip MP4. Compte gratuit avec 3 crédits.",
+        "h1": "Couper une vidéo YouTube",
+        "subtitle": "Créez des clips courts depuis YouTube pour Shorts, Reels, TikTok ou vos montages.",
+        "badge": "Découpe · Clips · Shorts & Reels",
+        "placeholder": "Lien YouTube à découper...",
+        "cta": "Découper la vidéo",
+        "tool_format": "cut",
+        "show_cut_options": True,
+        "h2": "Découpe YouTube en ligne, sans logiciel",
+        "lead": "Yestubers vous permet de couper une vidéo YouTube entre deux timestamps précis. Exportez un MP4 prêt à être publié sur les réseaux sociaux.",
+        "features": [
+            {"title": "Début/fin personnalisables", "text": "Réglez les secondes de début et de fin pour un clip sur mesure."},
+            {"title": "Export MP4", "text": "Fichier prêt à l'emploi, compatible tous réseaux sociaux."},
+            {"title": "3 crédits gratuits", "text": "Créez un compte pour obtenir 3 découpes par mois."},
+            {"title": "Rapide", "text": "Découpe traitée par nos serveurs en quelques secondes."},
+        ],
+        "steps": [
+            "Collez l'URL de la vidéo YouTube.",
+            "Indiquez le début et la fin de l'extrait en secondes.",
+            "Cliquez sur « Découper » et téléchargez votre clip.",
+        ],
+        "why": "La découpe est l'outil préféré des créateurs pour transformer une longue vidéo en contenu viral court. Yestubers automatise l'opération.",
+        "faqs": [
+            {"question": "Puis-je couper une vidéo gratuitement ?", "answer": "Oui, le compte gratuit inclut 3 crédits par mois pour découper des vidéos."},
+            {"question": "Quelle est la durée maximale d'un clip ?", "answer": "La durée maximale dépend de votre plan : 30s gratuit, jusqu'à 1h en Pro."},
+            {"question": "Le clip conserve-t-il la qualité HD ?", "answer": "Oui, la découpe conserve la qualité source disponible selon votre plan."},
+        ],
+        "related_links": [
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+            {"url": "/download-youtube-video", "label": "Télécharger YouTube"},
+        ],
+    },
+    "download-youtube-video": {
+        "template": "lp_base.html",
+        "slug": "download-youtube-video",
+        "canonical_path": "/download-youtube-video",
+        "title": "Télécharger une vidéo YouTube — MP4 Gratuit | Yestubers",
+        "description": "Téléchargez n'importe quelle vidéo YouTube au format MP4. Gratuit, rapide et sans publicité. 3 crédits mensuels offerts.",
+        "h1": "Télécharger une vidéo YouTube",
+        "subtitle": "Sauvegardez vos vidéos YouTube préférées en MP4 pour les regarder hors ligne.",
+        "badge": "Téléchargement MP4 · Gratuit · Sans pub",
+        "placeholder": "Collez un lien YouTube ici...",
+        "cta": "Télécharger la vidéo",
+        "tool_format": "mp4",
+        "show_cut_options": False,
+        "h2": "Téléchargez YouTube facilement",
+        "lead": "Yestubers est le téléchargeur YouTube le plus simple : un lien, un clic, un fichier MP4. Inscription rapide pour plus de qualité et de crédits.",
+        "features": [
+            {"title": "Lien → MP4", "text": "Collez simplement l'URL YouTube pour obtenir votre fichier."},
+            {"title": "Qualité HD", "text": "Téléchargez en 720p ou plus selon votre plan."},
+            {"title": "Hors ligne", "text": "Gardez vos vidéos sur tous vos appareils."},
+            {"title": "Sans pub", "text": "Aucune publicité intrusive pendant le téléchargement."},
+        ],
+        "steps": [
+            "Copiez l'URL de la vidéo.",
+            "Collez-la dans le champ prévu.",
+            "Cliquez sur « Télécharger la vidéo ».",
+        ],
+        "why": "Notre technologie de streaming progressif évite le stockage durable de vos fichiers sur nos serveurs. Rapide, anonyme et respectueux de votre vie privée.",
+        "faqs": [
+            {"question": "Le téléchargement est-il gratuit ?", "answer": "Oui, 2 vidéos sans compte, puis 3 crédits par mois avec un compte gratuit."},
+            {"question": "Puis-je télécharger des playlists ?", "answer": "Oui, l'option playlist est disponible pour les utilisateurs inscrits et les abonnements premium."},
+            {"question": "Quels formats sont disponibles ?", "answer": "MP4 pour la vidéo, MP3/M4A/WAV pour l'audio."},
+        ],
+        "related_links": [
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+            {"url": "/cut-youtube-video", "label": "Couper YouTube"},
+        ],
+    },
+    "convert-youtube-mp3": {
+        "template": "lp_base.html",
+        "slug": "convert-youtube-mp3",
+        "canonical_path": "/convert-youtube-mp3",
+        "title": "Convertir YouTube en MP3 — Convertisseur en ligne | Yestubers",
+        "description": "Convertissez des vidéos YouTube en MP3 gratuitement. Extraction audio rapide, sans logiciel. 3 crédits offerts par mois.",
+        "h1": "Convertir YouTube en MP3",
+        "subtitle": "Transformez n'importe quelle vidéo YouTube en fichier audio MP3 en quelques secondes.",
+        "badge": "Conversion MP3 · Gratuit · Sans logiciel",
+        "placeholder": "Lien YouTube à convertir...",
+        "cta": "Convertir en MP3",
+        "tool_format": "mp3",
+        "show_cut_options": False,
+        "h2": "Convertisseur YouTube MP3 simple et rapide",
+        "lead": "Yestubers extrait l'audio des vidéos YouTube pour créer des MP3 légers. Parfait pour playlists, podcasts et musique.",
+        "features": [
+            {"title": "Extraction audio", "text": "Piste audio MP3 claire, prête à être importée partout."},
+            {"title": "Rapide", "text": "Conversion en ligne en quelques secondes."},
+            {"title": "Sans compte limité", "text": "Testez sans inscription, puis bénéficiez de 3 crédits gratuits."},
+            {"title": "Qualité constante", "text": "MP3 192 kbps stéréo pour une écoute confortable."},
+        ],
+        "steps": [
+            "Collez l'URL de la vidéo YouTube.",
+            "Cliquez sur « Convertir en MP3 ».",
+            "Téléchargez le fichier audio obtenu.",
+        ],
+        "why": "Notre convertisseur est optimisé pour la vitesse et la qualité. Aucune publicité ne perturbe l'expérience.",
+        "faqs": [
+            {"question": "Convertir YouTube en MP3 est-il gratuit ?", "answer": "Oui, avec 2 essais sans compte puis 3 crédits gratuits par mois."},
+            {"question": "Puis-je convertir une playlist ?", "answer": "Les playlists sont supportées pour les comptes premium."},
+            {"question": "Le MP3 fonctionne-t-il sur iPhone ?", "answer": "Oui, les fichiers MP3 sont compatibles avec iPhone, Android et tous les lecteurs."},
+        ],
+        "related_links": [
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/download-youtube-video", "label": "Télécharger YouTube"},
+        ],
+    },
+    "youtube-downloader": {
+        "template": "lp_base.html",
+        "slug": "youtube-downloader",
+        "canonical_path": "/youtube-downloader",
+        "title": "YouTube Downloader — MP3/MP4 Gratuit | Yestubers",
+        "description": "Le meilleur YouTube downloader gratuit. Téléchargez des vidéos et de l'audio depuis YouTube en MP4, MP3, M4A et WAV.",
+        "h1": "YouTube Downloader",
+        "subtitle": "Téléchargez n'importe quelle vidéo YouTube en MP4 ou MP3, gratuitement et sans publicité.",
+        "badge": "MP3/MP4 · Gratuit · Sans pub",
+        "placeholder": "Collez un lien YouTube...",
+        "cta": "Télécharger",
+        "tool_format": "mp4",
+        "show_cut_options": False,
+        "h2": "Le YouTube downloader le plus rapide",
+        "lead": "Yestubers est le téléchargeur YouTube tout-en-un : vidéo MP4, audio MP3, découpe et playlists. Une seule URL, tous les formats.",
+        "features": [
+            {"title": "MP4 + MP3", "text": "Choisissez le format qui vous convient."},
+            {"title": "Sans inscription", "text": "Testez immédiatement avec 2 essais gratuits."},
+            {"title": "Découpe intégrée", "text": "Coupez des extraits depuis la même interface."},
+            {"title": "15 langues", "text": "Disponible dans le monde entier pour tous les utilisateurs."},
+        ],
+        "steps": [
+            "Copiez l'URL YouTube.",
+            "Collez-la dans le champ de téléchargement.",
+            "Choisissez MP4 ou MP3 et téléchargez.",
+        ],
+        "why": "Yestubers combine vitesse, simplicité et multi-formats. C'est l'outil de référence pour les créateurs et les utilisateurs quotidiens.",
+        "faqs": [
+            {"question": "Qu'est-ce qu'un YouTube downloader ?", "answer": "C'est un outil en ligne qui permet de télécharger des vidéos ou de l'audio depuis YouTube."},
+            {"question": "Yestubers est-il sécurisé ?", "answer": "Oui, nous n'utilisons pas de publicités malveillantes et ne stockons pas vos fichiers de manière permanente."},
+            {"question": "Quels formats propose Yestubers ?", "answer": "MP4 pour la vidéo, MP3/M4A/WAV pour l'audio."},
+        ],
+        "related_links": [
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/cut-youtube-video", "label": "Couper YouTube"},
+        ],
+    },
+    "youtube-cutter": {
+        "template": "lp_base.html",
+        "slug": "youtube-cutter",
+        "canonical_path": "/youtube-cutter",
+        "title": "YouTube Cutter — Découper une vidéo en ligne | Yestubers",
+        "description": "YouTube Cutter en ligne : découpez des extraits courts depuis n'importe quelle vidéo. Export MP4, inscription gratuite.",
+        "h1": "YouTube Cutter",
+        "subtitle": "Découpez une vidéo YouTube en clips courts pour vos réseaux sociaux.",
+        "badge": "Cutter · Clips · MP4",
+        "placeholder": "Lien YouTube à découper...",
+        "cta": "Découper",
+        "tool_format": "cut",
+        "show_cut_options": True,
+        "h2": "YouTube Cutter en ligne",
+        "lead": "Yestubers offre un cutter YouTube simple : définissez votre extrait, exportez un MP4 prêt à publier.",
+        "features": [
+            {"title": "Précision seconde", "text": "Début et fin réglables à la seconde près."},
+            {"title": "Export MP4", "text": "Clip optimisé pour les réseaux sociaux."},
+            {"title": "Gratuit", "text": "3 crédits offerts chaque mois."},
+            {"title": "Sans watermark", "text": "Clip propre et libre de droits d'usage."},
+        ],
+        "steps": [
+            "Collez l'URL YouTube.",
+            "Définissez le début et la fin.",
+            "Cliquez sur « Découper » et téléchargez.",
+        ],
+        "why": "Le YouTube Cutter Yestubers est conçu pour les créateurs qui veulent produire du contenu court rapidement.",
+        "faqs": [
+            {"question": "YouTube Cutter est-il gratuit ?", "answer": "Oui, avec un compte gratuit offrant 3 crédits de découpe par mois."},
+            {"question": "Puis-je découper un Short ?", "answer": "Oui, les liens YouTube Shorts sont supportés."},
+            {"question": "La qualité est-elle conservée ?", "answer": "Oui, la découpe conserve la résolution originale disponible selon votre plan."},
+        ],
+        "related_links": [
+            {"url": "/cut-youtube-video", "label": "Couper YouTube"},
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+        ],
+    },
+    "telecharger-video-youtube": {
+        "template": "lp_base.html",
+        "slug": "telecharger-video-youtube",
+        "canonical_path": "/telecharger-video-youtube",
+        "title": "Télécharger vidéo YouTube — MP4 Gratuit | Yestubers",
+        "description": "Téléchargez une vidéo YouTube en MP4 gratuitement. Rapide, sans publicité, 3 crédits offerts chaque mois.",
+        "h1": "Télécharger vidéo YouTube",
+        "subtitle": "Sauvegardez vos vidéos YouTube favorites au format MP4, simplement et rapidement.",
+        "badge": "Téléchargement MP4 · Gratuit",
+        "placeholder": "Collez un lien YouTube ici...",
+        "cta": "Télécharger la vidéo",
+        "tool_format": "mp4",
+        "show_cut_options": False,
+        "h2": "Comment télécharger une vidéo YouTube",
+        "lead": "Yestubers permet de télécharger n'importe quelle vidéo YouTube en MP4. Copiez le lien, collez-le et récupérez votre fichier.",
+        "features": [
+            {"title": "Facile", "text": "Aucune compétence technique requise."},
+            {"title": "MP4", "text": "Format universel compatible partout."},
+            {"title": "Gratuit", "text": "Essai sans compte puis 3 crédits par mois."},
+            {"title": "HD", "text": "Jusqu'à 4K selon votre abonnement."},
+        ],
+        "steps": [
+            "Copiez l'URL de la vidéo YouTube.",
+            "Collez-la dans le champ de saisie.",
+            "Cliquez sur « Télécharger la vidéo ».",
+        ],
+        "why": "Yestubers est le téléchargeur YouTube en français le plus rapide. L'interface est optimisée pour mobile et desktop.",
+        "faqs": [
+            {"question": "Puis-je télécharger sans créer de compte ?", "answer": "Oui, 2 essais gratuits sont disponibles sans inscription."},
+            {"question": "Quel format est proposé ?", "answer": "MP4 pour la vidéo et MP3/M4A/WAV pour l'audio."},
+            {"question": "Le téléchargement est-il illimité ?", "answer": "Le plan Pro offre des téléchargements illimités."},
+        ],
+        "related_links": [
+            {"url": "/download-youtube-video", "label": "Download YouTube Video"},
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+        ],
+    },
+    "convertisseur-youtube-mp3": {
+        "template": "lp_base.html",
+        "slug": "convertisseur-youtube-mp3",
+        "canonical_path": "/convertisseur-youtube-mp3",
+        "title": "Convertisseur YouTube MP3 Gratuit | Yestubers",
+        "description": "Convertissez vos vidéos YouTube en MP3 gratuitement. Extraction audio rapide, sans logiciel, 3 crédits par mois.",
+        "h1": "Convertisseur YouTube MP3",
+        "subtitle": "Transformez n'importe quelle vidéo YouTube en fichier MP3 en un clic.",
+        "badge": "Convertisseur MP3 · Gratuit · Sans logiciel",
+        "placeholder": "Lien YouTube à convertir...",
+        "cta": "Convertir en MP3",
+        "tool_format": "mp3",
+        "show_cut_options": False,
+        "h2": "Le convertisseur YouTube MP3 en français",
+        "lead": "Yestubers est le convertisseur YouTube MP3 le plus simple. Collez le lien, convertissez et téléchargez votre MP3.",
+        "features": [
+            {"title": "MP3 192 kbps", "text": "Qualité audio optimisée pour tous les appareils."},
+            {"title": "Sans installation", "text": "Tout se passe dans votre navigateur."},
+            {"title": "Gratuit", "text": "3 crédits offerts chaque mois."},
+            {"title": "Rapide", "text": "Conversion traitée en quelques secondes."},
+        ],
+        "steps": [
+            "Copiez le lien de la vidéo YouTube.",
+            "Collez-le dans le champ de conversion.",
+            "Cliquez sur « Convertir en MP3 ».",
+        ],
+        "why": "Notre convertisseur YouTube MP3 est entièrement en français, sans publicité invasive et sécurisé.",
+        "faqs": [
+            {"question": "Le convertisseur est-il gratuit ?", "answer": "Oui, avec un compte gratuit offrant 3 crédits par mois."},
+            {"question": "Quelle qualité MP3 ?", "answer": "MP3 192 kbps stéréo, compatible tous lecteurs."},
+            {"question": "Puis-je convertir des playlists ?", "answer": "Les playlists sont disponibles pour les utilisateurs premium."},
+        ],
+        "related_links": [
+            {"url": "/convert-youtube-mp3", "label": "Convert YouTube MP3"},
+            {"url": "/youtube-to-mp3", "label": "YouTube to MP3"},
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+        ],
+    },
+    "decouper-video-youtube": {
+        "template": "lp_base.html",
+        "slug": "decouper-video-youtube",
+        "canonical_path": "/decouper-video-youtube",
+        "title": "Découper une vidéo YouTube — Cutter en ligne | Yestubers",
+        "description": "Découpez facilement une vidéo YouTube en extrait MP4. Définissez début et fin, téléchargez votre clip. Inscription gratuite.",
+        "h1": "Découper une vidéo YouTube",
+        "subtitle": "Créez des clips courts depuis YouTube pour vos réseaux sociaux, sans logiciel.",
+        "badge": "Découper · Clips · MP4",
+        "placeholder": "Lien YouTube à découper...",
+        "cta": "Découper la vidéo",
+        "tool_format": "cut",
+        "show_cut_options": True,
+        "h2": "Découper une vidéo YouTube en ligne",
+        "lead": "Yestubers permet de découper une vidéo YouTube entre deux timestamps. Idéal pour créer des Shorts, Reels et TikTok.",
+        "features": [
+            {"title": "Facile", "text": "Début et fin en quelques clics."},
+            {"title": "MP4", "text": "Export prêt à publier sur tous les réseaux."},
+            {"title": "Gratuit", "text": "3 crédits offerts chaque mois."},
+            {"title": "Précis", "text": "Réglage à la seconde près."},
+        ],
+        "steps": [
+            "Collez l'URL de la vidéo YouTube.",
+            "Indiquez le début et la fin de l'extrait.",
+            "Cliquez sur « Découper la vidéo » et téléchargez.",
+        ],
+        "why": "Yestubers est le cutter YouTube en français le plus accessible : rapide, sans pub et optimisé mobile.",
+        "faqs": [
+            {"question": "Puis-je découper gratuitement ?", "answer": "Oui, 3 crédits par mois sont offerts avec un compte gratuit."},
+            {"question": "Quelle durée maximale ?", "answer": "Jusqu'à 30s gratuitement et jusqu'à 1h avec le plan Pro."},
+            {"question": "Le clip a-t-il un watermark ?", "answer": "Non, les clips exportés sont propres."},
+        ],
+        "related_links": [
+            {"url": "/cut-youtube-video", "label": "Cut YouTube Video"},
+            {"url": "/youtube-to-mp4", "label": "YouTube to MP4"},
+            {"url": "/youtube-cutter", "label": "YouTube Cutter"},
+        ],
+    },
+}
+
+for _lp_slug, _lp_data in LP_PAGES.items():
+    _lp_template = _lp_data["template"]
+
+    @app.get(f"/{_lp_slug}", response_class=HTMLResponse)
+    async def _lp_page(request: Request, lp_slug: str = _lp_slug, db: Session = Depends(get_db)):
+        if lp_slug not in LP_PAGES:
+            raise HTTPException(status_code=404)
+        user = get_user_from_session(request, db)
+        i18n = translate_dict(request)
+        data = LP_PAGES[lp_slug]
+        return HTMLResponse(_jinja_env.get_template(data["template"]).render(
+            request=request, user=user, i18n=i18n, locale=i18n["_locale"], **data
+        ))
+
+for _lang in SUPPORTED_LOCALES:
+    for _lp_slug, _lp_data in LP_PAGES.items():
+        _lp_template = _lp_data["template"]
+
+        @app.get(f"/{_lang}/{_lp_slug}", response_class=HTMLResponse)
+        async def _lp_localized(request: Request, lang: str = _lang, lp_slug: str = _lp_slug, db: Session = Depends(get_db)):
+            if lp_slug not in LP_PAGES:
+                raise HTTPException(status_code=404)
+            request._forced_locale = lang
+            user = get_user_from_session(request, db)
+            i18n = translate_dict(request)
+            data = LP_PAGES[lp_slug]
+            return HTMLResponse(_jinja_env.get_template(data["template"]).render(
+                request=request, user=user, i18n=i18n, locale=i18n["_locale"], **data
+            ))
+
+# Legacy SEO tool pages still served from SEO_PAGES dict
 @app.get("/{tool}", response_class=HTMLResponse)
 async def seo_tool_page(request: Request, tool: str, db: Session = Depends(get_db)):
     if tool not in SEO_PAGES:
@@ -2890,14 +3371,31 @@ async def api_signup(request: Request, email: str = Form(...), password: str = F
             break
     user.referral_code = code
 
-    # Apply referral reward
-    ref_cookie = request.cookies.get("ref")
+    # Apply referral reward: +3 credits for both referrer and new user
+    ref_cookie = request.cookies.get("ref") or request.query_params.get("ref") or ""
+    ref_field = ""  # API clients may send a 'ref' form field
     if ref_cookie:
+        ref_field = ref_cookie
+    if referrer_id := request.query_params.get("ref"):
+        ref_field = referrer_id
+    # Prefer explicit form field if present
+    body_bytes = b""
+    try:
+        body_bytes = await request.body()
+    except Exception:
+        pass
+    if body_bytes:
+        from urllib.parse import parse_qs
+        parsed = parse_qs(body_bytes.decode("utf-8", errors="ignore"))
+        if "ref" in parsed and parsed["ref"][0]:
+            ref_field = parsed["ref"][0]
+    if ref_field:
         try:
-            referrer = db.query(User).filter(User.referral_code == ref_cookie.upper()).first()
-            if referrer:
-                user.referred_by = referrer.id
-                referrer.credits = min(1000, referrer.credits + 2)
+            referrer = db.query(User).filter(User.referral_code == ref_field.strip().upper()).first()
+            if referrer and referrer.id != user.id:
+                user.referrer_id = referrer.id
+                user.credits += 3
+                referrer.credits = min(1000, referrer.credits + 3)
                 db.add(referrer)
         except Exception:
             pass
@@ -3035,14 +3533,15 @@ async def api_public_download(
     check_rate_limit(request, "download")
     if not is_valid_youtube_url(url):
         raise HTTPException(400, "URL YouTube invalide")
-    # Audio/HD are premium; anonymous teaser only allows 480p video MP4.
+    # Audio/HD are premium; anonymous teaser only allows 360p video MP4.
     if format.lower() not in ("mp4", ""):
         raise HTTPException(403, "signup_required")
-    quality = quality if quality in ("480", "360", "240") else ANON_MAX_QUALITY
+    quality = quality if quality in ("360", "240", "144") else ANON_MAX_QUALITY
     ip = _anon_ip(request)
     _check_anon_limit(ip)
     try:
         data = await download_public(url, format, quality, max_duration=120)
+        remaining = _anon_remaining(ip)
         return {
             "ok": True,
             "video_id": data["video_id"],
@@ -3050,8 +3549,11 @@ async def api_public_download(
             "duration": data["duration"],
             "filesize": data["filesize"],
             "download_url": f"/api/download/{data['video_id']}/file",
-            "remaining_anonymous": max(0, ANON_LIMIT - _anon_counts[ip]["count"])
+            "remaining_anonymous": remaining,
+            "upgrade_required": remaining == 0
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(400, str(e))
 
@@ -3540,6 +4042,19 @@ async def api_me(user: User = Depends(require_user)):
     return {
         "id": user.id, "email": user.email, "plan": user.plan,
         "credits": user.credits, "plan_name": PLANS[user.plan]["name"],
+        "referral_code": user.referral_code,
+    }
+
+@app.get("/api/referral/stats")
+async def api_referral_stats(user: User = Depends(require_user), db: Session = Depends(get_db)):
+    count = db.query(User).filter(User.referrer_id == user.id).count()
+    earned = min(1000, count * 3)
+    link = f"https://yestubers.cloud/signup?ref={user.referral_code or ''}"
+    return {
+        "referral_code": user.referral_code,
+        "referral_link": link,
+        "referrals_count": count,
+        "earned_credits": earned,
     }
 
 @app.post("/api/user/update")
