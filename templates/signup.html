@@ -83,6 +83,8 @@
                 <div id="signup-status" class="status-msg"></div>
                 <button type="submit" class="btn-cta full-width">Créer mon compte</button>
             </form>
+            <div class="referral-box" id="referral-box" style="display:none; margin-top:1rem; padding:0.75rem; border:1px dashed rgba(255,45,85,0.4); border-radius:0.5rem; text-align:center; font-size:0.9rem; color:#c8c8d8;"
+>🎉 Vous avez été parrainé ! <strong>+2 crédits</strong> offerts à votre parrain dès votre inscription.</div>
             <p class="auth-link">Déjà un compte ? <a href="/login">Se connecter</a></p>
         </div>
     </section>
@@ -117,6 +119,16 @@
             else { status.textContent = '❌ ' + (data.detail || 'Erreur'); status.className = 'status-msg error'; }
         } catch(err) { status.textContent = '❌ Erreur réseau'; status.className = 'status-msg error'; }
     });
+
+    // Referral cookie from URL ?ref=CODE
+    (function(){
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+            document.cookie = 'ref=' + encodeURIComponent(ref) + '; path=/; max-age=604800; SameSite=Lax';
+            document.getElementById('referral-box').style.display = 'block';
+        }
+    })();
     </script>
 
 

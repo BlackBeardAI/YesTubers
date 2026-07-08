@@ -103,6 +103,17 @@
             </div>
         </div>
 
+        <!-- Referral -->
+        <section class="dash-card">
+            <h2>🎁 Parrainez vos amis — gagnez 2 crédits par filleul</h2>
+            <p style="color:#a0a0b0; margin-bottom:1rem;">Partagez votre lien. Chaque inscription validée vous rapporte <strong>+2 crédits</strong> (max 1000).</p>
+            <div class="input-wrapper giant" style="max-width:600px;">
+                <input type="text" id="ref-link" value="https://yestubers.cloud/signup?ref={{ user.referral_code or '' }}" readonly />
+                <button type="button" onclick="copyRef()" class="paste-btn">Copier</button>
+            </div>
+            <div id="ref-status" class="status-msg" style="margin-top:0.5rem;"></div>
+        </section>
+
         <!-- New download -->
         <section class="dash-card hero-card">
             <h2>{{ i18n.dash_new_download if 'dash_new_download' in i18n else 'Nouveau téléchargement' }}</h2>
@@ -406,6 +417,15 @@
 
     async function deleteVideo(id) { if(confirm('Supprimer cette vidéo ?')){ await fetch('/api/videos/'+id,{method:'DELETE'}); document.getElementById('v-'+id)?.remove(); } }
     async function deleteCut(id) { if(confirm('Supprimer cet extrait ?')){ await fetch('/api/cuts/'+id,{method:'DELETE'}); document.getElementById('c-'+id)?.remove(); } }
+
+    function copyRef() {
+        const input = document.getElementById('ref-link');
+        input.select();
+        document.execCommand('copy');
+        const status = document.getElementById('ref-status');
+        status.textContent = '✅ Lien copié ! Partagez-le pour gagner 2 crédits.';
+        status.className = 'status-msg success';
+    }
     </script>
 </body>
 </html>

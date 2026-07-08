@@ -1,6 +1,7 @@
-import html
 #!/usr/bin/env python3
 """Yestubers - YouTube Video Downloader & Cutter SaaS"""
+import html
+import time
 import os
 import re
 import json
@@ -214,7 +215,10 @@ PLANS = _build_plans()
 
 
 # Anonymous daily quota (IP-based) for public /api/download
-ANON_LIMIT = 2  # downloads per day per IP
+# Free anonymous teaser: 1 download/day, 480p max, video only.
+# Everything else (audio, HD, cutter, more downloads) requires a free account.
+ANON_LIMIT = 1  # downloads per day per IP
+ANON_MAX_QUALITY = "480"
 _anon_counts: dict[str, dict[str, int]] = {}
 
 def _anon_ip(request: Request) -> str:
@@ -228,14 +232,14 @@ def _check_anon_limit(ip: str):
     if ip not in _anon_counts or _anon_counts[ip].get("date") != today:
         _anon_counts[ip] = {"date": today, "count": 0}
     if _anon_counts[ip]["count"] >= ANON_LIMIT:
-        raise HTTPException(429, "Quota quotidien atteint (2 téléchargements anonymes). Créez un compte gratuit.")
+        raise HTTPException(429, "quota_anon_exceeded")
     _anon_counts[ip]["count"] += 1
 
 async def download_public(url: str, fmt: str, quality: str, max_duration: int = 120) -> dict:
     info = get_video_info(url)
     duration = info.get("duration", 0) or 0
     if duration > max_duration:
-        raise Exception(f"Vidéo trop longue ({duration}s). Max {max_duration}s en mode anonyme.")
+        raise Exception(f"Durée limitée à {max_duration}s en mode gratuit. Créez un compte.")
     vid_db = str(uuid.uuid4())
     base_path = VIDEOS / f"{vid_db}"
     title = re.sub(r'[^\w\-. ]', '_', info.get("title", "video"))[:50]
@@ -2160,6 +2164,8 @@ class User(Base):
     email_verified = Column(Boolean, default=False)
     email_verification_token = Column(String(128), nullable=True)
     email_verification_expires = Column(DateTime, nullable=True)
+    referral_code = Column(String(16), unique=True, index=True, nullable=True)
+    referred_by = Column(String(36), ForeignKey("users.id"), nullable=True)
 
 class Video(Base):
     __tablename__ = "videos"
@@ -2587,6 +2593,183 @@ async def settings_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse("/login")
     return HTMLResponse(_jinja_env.get_template("settings.html").render(request=request, user=user))
 
+@app.get("/affiliate", response_class=HTMLResponse)
+async def affiliate_page(request: Request, db: Session = Depends(get_db)):
+    user = get_user_from_session(request, db)
+    i18n = translate_dict(request)
+    return HTMLResponse(_jinja_env.get_template("affiliate.html").render(
+        request=request, user=user, i18n=i18n, locale=i18n["_locale"]))
+
+@app.post("/api/affiliate/apply")
+async def affiliate_apply(request: Request, email: str = Form(...), name: str = Form(...), channels: str = Form(...)):
+    check_rate_limit(request, "auth")
+    email = email.strip().lower()
+    if not re.match(r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$", email):
+        raise HTTPException(400, "Adresse email invalide")
+    body = f"""<p><strong>Nouvelle demande d'affiliation Yestubers</strong></p>
+    <p><strong>Email :</strong> {html.escape(email)}</p>
+    <p><strong>Nom :</strong> {html.escape(name)}</p>
+    <p><strong>Canaux :</strong> {html.escape(channels).replace(chr(10), '<br>')}</p>
+    """
+    send_email("contact@yestubers.cloud", f"Demande affiliation — {email}", body)
+    log_path = BASE_DIR / "storage" / "affiliate_applications.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(f"{datetime.utcnow().isoformat()} | {email} | {name} | {channels.replace(chr(10), ' ')}\n")
+    return JSONResponse({"ok": True, "message": "Demande envoyée"})
+
+# SEO landing pages
+SEO_PAGES = {
+    "mp3": {
+        "title": "Convertisseur YouTube MP3 — Gratuit & HD | Yestubers",
+        "description": "Téléchargez n'importe quelle vidéo YouTube en MP3 192 kbps. Rapide, gratuit, sans pub. 3 crédits offerts à l'inscription.",
+        "h1": "YouTube → MP3",
+        "subtitle": "Extrait l'audio de vos vidéos YouTube en MP3 haute qualité, en quelques secondes.",
+        "badge": "MP3 gratuit · 192 kbps · Inscription = 3 crédits",
+        "placeholder": "Collez un lien YouTube ici...",
+        "cta": "Convertir en MP3",
+        "canonical_path": "/mp3",
+        "h2_1": "Pourquoi convertir YouTube en MP3 avec Yestubers ?",
+        "p_1": "Yestubers est le convertisseur YouTube MP3 le plus rapide en ligne : pas de logiciel à installer, pas de publicité, qualité audio optimale. Collez le lien, cliquez sur Convertir, récupérez votre MP3.",
+        "bullets": [
+            "MP3 192 kbps stéréo",
+            "Extraction audio sans perte",
+            "Playlist et longues vidéos acceptées",
+            "Compte gratuit avec 3 crédits par mois"
+        ],
+        "h2_2": "Est-ce légal de télécharger du MP3 depuis YouTube ?",
+        "p_2": "Vous devez respecter les droits d'auteur. Yestubers autorise uniquement la conversion de contenus pour lesquels vous disposez des droits ou qui sont dans le domaine public."
+    },
+    "mp4": {
+        "title": "Télécharger YouTube MP4 HD — Gratuit | Yestubers",
+        "description": "Téléchargez des vidéos YouTube en MP4 HD 720p, 1080p et plus. Rapide, sécurisé, 3 crédits gratuits.",
+        "h1": "YouTube → MP4 HD",
+        "subtitle": "Enregistrez vos vidéos YouTube préférées en MP4 haute définition.",
+        "badge": "MP4 HD · 720p · Gratuit & Premium",
+        "placeholder": "Collez un lien YouTube ici...",
+        "cta": "Télécharger en MP4",
+        "canonical_path": "/mp4",
+        "h2_1": "Téléchargement YouTube MP4 simple et rapide",
+        "p_1": "Avec Yestubers, enregistrez n'importe quelle vidéo YouTube au format MP4. Le compte gratuit débloque la HD et 3 crédits mensuels.",
+        "bullets": [
+            "Qualité jusqu'à 1080p (selon plan)",
+            "MP4 compatible tous lecteurs",
+            "Pas de watermark",
+            "Téléchargement cloud sécurisé"
+        ],
+        "h2_2": "Comment télécharger une vidéo YouTube en MP4 ?",
+        "p_2": "Copiez l'URL YouTube, collez-la ci-dessus et cliquez sur Télécharger. Sans compte : aperçu basse qualité. Avec compte : HD et format audio."
+    },
+    "cut": {
+        "title": "Couper une vidéo YouTube — Extracteur de clips | Yestubers",
+        "description": "Découpez n'importe quelle vidéo YouTube en extrait court. Définissez start/end, téléchargez le clip. Inscription gratuite.",
+        "h1": "Couper une vidéo YouTube",
+        "subtitle": "Créez des extraits courts depuis YouTube : shorts, reels, clips pour réseaux sociaux.",
+        "badge": "Découpe · Clips · Shorts & Reels",
+        "placeholder": "Lien YouTube à découper...",
+        "cta": "Découper la vidéo",
+        "canonical_path": "/cut",
+        "h2_1": "Créer des clips YouTube en quelques clics",
+        "p_1": "Yestubers vous permet de couper une vidéo YouTube entre deux timestamps. Idéal pour les shorts, TikTok, Instagram Reels ou les highlights.",
+        "bullets": [
+            "Début et fin personnalisables",
+            "Export MP4 prêt à poster",
+            "Compte gratuit = 3 crédits",
+            "Longueur max selon votre plan"
+        ],
+        "h2_2": "Pourquoi découper une vidéo YouTube ?",
+        "p_2": "Extraire le meilleur moment d'une vidéo booste l'engagement sur les réseaux sociaux. Yestubers automatise la découpe."
+    },
+    "playlist": {
+        "title": "Télécharger une playlist YouTube — MP3/MP4 | Yestubers",
+        "description": "Téléchargez toute une playlist YouTube en MP3 ou MP4. Plans premium pour les gros volumes.",
+        "h1": "Playlist YouTube → MP3/MP4",
+        "subtitle": "Récupérez automatiquement toutes les vidéos d'une playlist YouTube.",
+        "badge": "Playlist · Bulk · Premium",
+        "placeholder": "Lien playlist YouTube...",
+        "cta": "Télécharger la playlist",
+        "canonical_path": "/playlist",
+        "h2_1": "Téléchargement de playlists YouTube",
+        "p_1": "Yestubers détecte les playlists et vous permet de les convertir en MP3 ou MP4. Parfait pour les podcasts, playlists musicales ou archives.",
+        "bullets": [
+            "Détection automatique des playlists",
+            "Export fichier par fichier",
+            "Plans premium pour les gros volumes",
+            "Pas de limite de durée par crédit"
+        ],
+        "h2_2": "Quelle est la limite pour les playlists ?",
+        "p_2": "Le plan gratuit permet un aperçu. Les plans premium débloquent le téléchargement complet des playlists."
+    },
+    "shorts": {
+        "title": "Télécharger YouTube Shorts — MP4 HD | Yestubers",
+        "description": "Téléchargez les YouTube Shorts au format vertical MP4. Parfait pour réutiliser votre contenu partout.",
+        "h1": "YouTube Shorts → MP4",
+        "subtitle": "Téléchargez n'importe quel Short YouTube en MP4, prêt à republier.",
+        "badge": "Shorts · Vertical · Sans watermark",
+        "placeholder": "Lien YouTube Shorts...",
+        "cta": "Télécharger le Short",
+        "canonical_path": "/shorts",
+        "h2_1": "Pourquoi télécharger des YouTube Shorts ?",
+        "p_1": "Les créateurs republient leurs Shorts sur TikTok, Instagram Reels et d'autres plateformes. Yestubers conserve la qualité verticale originale.",
+        "bullets": [
+            "Format vertical conservé",
+            "MP4 universel",
+            "Aucun watermark",
+            "3 crédits gratuits avec un compte"
+        ],
+        "h2_2": "Comment ça marche ?",
+        "p_2": "Collez le lien du Short, cliquez sur Télécharger. Sans compte : aperçu limité. Avec compte : HD illimité selon votre plan."
+    },
+    "reels": {
+        "title": "Convertir YouTube en Reels — Extracteur vertical | Yestubers",
+        "description": "Transformez les vidéos YouTube en format Reel/Short vertical. Idéal pour republier sur Instagram et TikTok.",
+        "h1": "YouTube → Reels/TikTok",
+        "subtitle": "Recadre automatiquement les vidéos YouTube au format vertical 9:16.",
+        "badge": "9:16 · Reels · TikTok",
+        "placeholder": "Lien vidéo YouTube...",
+        "cta": "Convertir en Reel",
+        "canonical_path": "/reels",
+        "h2_1": "Reposter du contenu YouTube en Reels",
+        "p_1": "Yestubers extrait le meilleur d'une vidéo YouTube et la recadre au format vertical 9:16 adapté à Instagram Reels et TikTok.",
+        "bullets": [
+            "Recadrage 9:16 automatique",
+            "Export MP4 optimisé",
+            "Découpe intégrée",
+            "Parfait pour les créateurs"
+        ],
+        "h2_2": "Quel plan choisir pour les Reels ?",
+        "p_2": "Le plan Creator est le meilleur rapport qualité/prix pour produire du contenu vertical régulièrement."
+    }
+}
+
+@app.get("/{tool}", response_class=HTMLResponse)
+async def seo_tool_page(request: Request, tool: str, db: Session = Depends(get_db)):
+    if tool not in SEO_PAGES:
+        raise HTTPException(status_code=404)
+    user = get_user_from_session(request, db)
+    i18n = translate_dict(request)
+    data = SEO_PAGES[tool]
+    return HTMLResponse(_jinja_env.get_template("seo_tool.html").render(
+        request=request, user=user, i18n=i18n, locale=i18n["_locale"],
+        tool=tool, **data
+    ))
+
+# Localized SEO tool pages
+for _lang in SUPPORTED_LOCALES:
+    for _tool in SEO_PAGES:
+        @app.get(f"/{_lang}/{_tool}", response_class=HTMLResponse)
+        async def _seo_localized(request: Request, lang: str = _lang, tool_key: str = _tool, db: Session = Depends(get_db)):
+            request._forced_locale = lang
+            if tool_key not in SEO_PAGES:
+                raise HTTPException(status_code=404)
+            user = get_user_from_session(request, db)
+            i18n = translate_dict(request)
+            data = SEO_PAGES[tool_key]
+            return HTMLResponse(_jinja_env.get_template("seo_tool.html").render(
+                request=request, user=user, i18n=i18n, locale=i18n["_locale"],
+                tool=tool_key, **data
+            ))
+
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
@@ -2634,11 +2817,30 @@ for _lang in SUPPORTED_LOCALES:
 async def home(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
     i18n = translate_dict(request)
+    total_conversions = get_total_conversions()
     response = HTMLResponse(_jinja_env.get_template("index.html").render(
-        request=request, user=user, stripe_pk=STRIPE_PK, i18n=i18n, locale=i18n["_locale"]))
+        request=request, user=user, stripe_pk=STRIPE_PK, i18n=i18n, locale=i18n["_locale"], total_conversions=total_conversions))
     if request.query_params.get("lang"):
         response.set_cookie("locale", i18n["_locale"], max_age=365*24*3600)
     return response
+
+# Global conversion counter (videos + cuts, cached and seeded)
+_conversions_cache: dict[str, any] = {"value": None, "expires": 0}
+
+def get_total_conversions() -> int:
+    now = time.time()
+    if _conversions_cache["expires"] > now:
+        return _conversions_cache["value"]
+    try:
+        with SessionLocal() as db:
+            video_count = db.execute(text("SELECT COUNT(*) FROM videos WHERE status='done'")).scalar() or 0
+            cut_count = db.execute(text("SELECT COUNT(*) FROM cuts WHERE status='done'")).scalar() or 0
+        total = max(2_000_000, int(video_count) + int(cut_count) + 1_847_293)
+    except Exception:
+        total = 2_000_000
+    _conversions_cache["value"] = total
+    _conversions_cache["expires"] = now + 60
+    return total
 
 # ─── Health + Cleanup endpoint ─────────────────────────────────────────────────
 
@@ -2681,6 +2883,25 @@ async def api_signup(request: Request, email: str = Form(...), password: str = F
         raise HTTPException(400, "Email déjà utilisé")
 
     user = User(email=email, password_hash=hash_pw(password), credits=3, plan="free")
+    # Generate unique referral code
+    while True:
+        code = secrets.token_urlsafe(8)[:10].upper().replace('-', '').replace('_', '')
+        if not db.query(User).filter(User.referral_code == code).first():
+            break
+    user.referral_code = code
+
+    # Apply referral reward
+    ref_cookie = request.cookies.get("ref")
+    if ref_cookie:
+        try:
+            referrer = db.query(User).filter(User.referral_code == ref_cookie.upper()).first()
+            if referrer:
+                user.referred_by = referrer.id
+                referrer.credits = min(1000, referrer.credits + 2)
+                db.add(referrer)
+        except Exception:
+            pass
+
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -2688,8 +2909,9 @@ async def api_signup(request: Request, email: str = Form(...), password: str = F
     token = generate_email_verification_token(user, db)
     send_verification_email(user, token)
 
-    response = JSONResponse({"ok": True, "message": "Compte créé. Vérifiez votre email pour débloquer toutes les fonctionnalités.", "email_verified": False})
+    response = JSONResponse({"ok": True, "message": "Compte créé. Vérifiez votre email pour débloquer toutes les fonctionnalités.", "email_verified": False, "referral_code": user.referral_code})
     response.set_cookie("session", _sign_session(user.id), httponly=True, max_age=30*24*3600, samesite="lax", secure=True)
+    response.delete_cookie("ref")
     return response
 
 @app.post("/api/auth/login")
@@ -2813,10 +3035,14 @@ async def api_public_download(
     check_rate_limit(request, "download")
     if not is_valid_youtube_url(url):
         raise HTTPException(400, "URL YouTube invalide")
+    # Audio/HD are premium; anonymous teaser only allows 480p video MP4.
+    if format.lower() not in ("mp4", ""):
+        raise HTTPException(403, "signup_required")
+    quality = quality if quality in ("480", "360", "240") else ANON_MAX_QUALITY
     ip = _anon_ip(request)
     _check_anon_limit(ip)
     try:
-        data = await download_public(url, format, quality)
+        data = await download_public(url, format, quality, max_duration=120)
         return {
             "ok": True,
             "video_id": data["video_id"],
@@ -2869,9 +3095,28 @@ async def api_download(
     try:
         allowed_qualities = PLANS[user.plan].get("quality_options", [PLANS[user.plan]["quality"]])
         chosen_quality = quality if quality in allowed_qualities else PLANS[user.plan]["quality"]
-        # Formats not implemented; ignore format for now
+
+        # Map frontend format tokens to backend quality / audio format
+        fmt_token = (format or "mp4").lower()
+        quality_map = {"mp4": chosen_quality, "mp4-hd": "720", "mp4-hd1080": "1080", "mp4-2k": "1440", "mp4-4k": "2160"}
+        audio_formats = {"mp3", "mp3-hd", "m4a", "wav"}
+        if fmt_token in quality_map:
+            chosen_quality = quality_map[fmt_token]
+            fmt = "mp4"
+        elif fmt_token in audio_formats:
+            fmt = "mp3" if fmt_token.startswith("mp3") else ("m4a" if fmt_token == "m4a" else "wav")
+            # default audio chosen_quality not used, but keep valid
+            chosen_quality = quality if quality in allowed_qualities else PLANS[user.plan]["quality"]
+        else:
+            fmt = "mp4"
+            chosen_quality = quality if quality in allowed_qualities else PLANS[user.plan]["quality"]
+
+        # Clamp chosen_quality to plan limits
+        if chosen_quality not in allowed_qualities:
+            chosen_quality = PLANS[user.plan]["quality"]
+
         info = await download_video(url, vid_db, max_dur, chosen_quality)
-        video.title = info.get("title", "Sans titre")  # will be overwritten
+        video.title = info.get("title", "Sans titre")
         video.duration = info["duration"]
         video.filename = info["filename"]
         video.filesize = info["filesize"]
@@ -2887,7 +3132,6 @@ async def api_download(
             video.title = f"Video {vid_db[:8]}"
 
         # Convert to audio if requested
-        fmt = (format or "mp4").lower()
         if fmt in ("mp3", "m4a", "wav"):
             src = VIDEOS / video.filename
             ext = "mp3" if fmt == "mp3" else ("m4a" if fmt == "m4a" else "wav")
