@@ -3372,12 +3372,9 @@ async def api_signup(request: Request, email: str = Form(...), password: str = F
     user.referral_code = code
 
     # Apply referral reward: +3 credits for both referrer and new user
-    ref_cookie = request.cookies.get("ref") or request.query_params.get("ref") or ""
-    ref_field = ""  # API clients may send a 'ref' form field
-    if ref_cookie:
-        ref_field = ref_cookie
-    if referrer_id := request.query_params.get("ref"):
-        ref_field = referrer_id
+    ref_cookie = request.cookies.get("ref") or ""
+    ref_param = request.query_params.get("ref") or ""
+    ref_field = ref_cookie or ref_param
     # Prefer explicit form field if present
     body_bytes = b""
     try:
@@ -3411,6 +3408,21 @@ async def api_signup(request: Request, email: str = Form(...), password: str = F
     response.set_cookie("session", _sign_session(user.id), httponly=True, max_age=30*24*3600, samesite="lax", secure=True)
     response.delete_cookie("ref")
     return response
+
+@app.get("/api/referral/lookup/{code}")
+async def referral_lookup(code: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.referral_code == code.strip().upper()).first()
+    if not user:
+        raise HTTPException(404, "Code invalide")
+    return {"ok": True, "referral_code": user.referral_code, "referral_link": f"https://yestubers.cloud/signup?ref={user.referral_code}"}
+
+@app.get("/affiliate")
+async def affiliate_page(request: Request, db: Session = Depends(get_db)):
+    user = get_user_from_session(request, db)
+    i18n = translate_dict(request)
+    return HTMLResponse(_jinja_env.get_template("affiliate.html").render(
+        request=request, user=user, i18n=i18n, locale=i18n["_locale"]
+    ))
 
 @app.post("/api/auth/login")
 async def api_login(request: Request, email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):

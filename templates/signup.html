@@ -76,6 +76,7 @@
                 <p class="auth-sub">3 crédits gratuits par mois. Passez premium à partir de <strong>5.99€</strong>.</p>
             </div>
             <form id="signup-form">
+                <input type="hidden" name="ref" id="ref-field" value="" />
                 <label>Email</label>
                 <input type="email" name="email" required placeholder="vous@email.com" />
                 <label>Mot de passe</label>
@@ -127,6 +128,8 @@
         if (ref) {
             document.cookie = 'ref=' + encodeURIComponent(ref) + '; path=/; max-age=604800; SameSite=Lax';
             document.getElementById('referral-box').style.display = 'block';
+            const field = document.getElementById('ref-field');
+            if (field) field.value = ref;
         }
     })();
     </script>
