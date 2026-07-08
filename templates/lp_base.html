@@ -15,7 +15,7 @@
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <meta name="author" content="Yestubers">
     <link rel="canonical" href="https://yestubers.cloud{{ canonical_path }}">
-    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -93,13 +93,13 @@
         .lp-content ul { padding-left: 1.4rem; margin: 1rem 0; }
         .lp-content li { margin: 0.55rem 0; }
         .lp-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin: 2rem 0; }
-        .lp-feature { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 1rem; padding: 1.4rem; }
+        .lp-feature { background: rgba(255,255,255,0.7); border: 1px solid var(--border); border-radius: 1rem; padding: 1.4rem; }
         .lp-feature strong { color: #fff; display: block; margin-bottom: 0.4rem; }
         .lp-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.5rem 0; }
-        .lp-links a { background: rgba(255,45,85,0.12); color: #ff9aa8; padding: 0.45rem 0.85rem; border-radius: 999px; font-size: 0.9rem; text-decoration: none; }
-        .lp-links a:hover { background: rgba(255,45,85,0.22); }
+        .lp-links a { background: rgba(37,99,235,0.08); color: var(--primary); padding: 0.45rem 0.85rem; border-radius: 999px; font-size: 0.9rem; text-decoration: none; }
+        .lp-links a:hover { background: rgba(37,99,235,0.14); }
         .lp-faq { margin-top: 2rem; }
-        .lp-faq-item { border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1.2rem 0; }
+        .lp-faq-item { border-bottom: 1px solid var(--border); padding: 1.2rem 0; }
         .lp-faq-item h3 { margin: 0 0 0.5rem; color: #fff; font-size: 1.15rem; cursor: pointer; }
         .lp-faq-item p { margin: 0; color: #a0a0b0; }
     </style>
@@ -251,14 +251,14 @@
     </footer>
 
     {% if not user %}
-    <div class="signup-modal" id="lpSignupModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
-        <div class="signup-modal-card" style="background:#11131a; border:1px solid rgba(255,45,85,0.3); border-radius:1rem; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div class="signup-modal" id="lpSignupModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,23,42,0.45); align-items:center; justify-content:center;">
+        <div class="signup-modal-card" style="background:#ffffff; border:1px solid var(--border); border-radius:1rem; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(15,23,42,0.12);">
             <div style="font-size:2rem; margin-bottom:0.5rem;">🔒</div>
             <h2 style="margin:0 0 0.5rem; font-size:1.5rem;">Débloquez {{ cta }} gratuitement</h2>
-            <p style="color:#a0a0b0; margin-bottom:1.5rem;">Créez un compte pour obtenir <strong>3 crédits/mois · MP3 · HD · Découpe</strong>.</p>
+            <p style="color:var(--text-muted); margin-bottom:1.5rem;">Créez un compte pour obtenir <strong>3 crédits/mois · MP3 · HD · Découpe</strong>.</p>
             <a href="/signup" class="btn-cta full-width" style="margin-bottom:0.75rem; display:block;">Créer un compte gratuit →</a>
             <a href="/pricing" class="btn-secondary" style="display:block; margin-bottom:0.75rem;">Voir les plans Premium</a>
-            <button onclick="document.getElementById('lpSignupModal').style.display='none'" style="background:none; border:none; color:#888; cursor:pointer; font-size:0.9rem;">Continuer avec la version gratuite</button>
+            <button onclick="document.getElementById('lpSignupModal').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem;">Continuer avec la version gratuite</button>
         </div>
     </div>
     {% endif %}

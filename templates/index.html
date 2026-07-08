@@ -16,7 +16,7 @@
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <meta name="author" content="Yestubers">
     <link rel="canonical" href="https://yestubers.cloud/{% if locale != 'en' %}{{ locale }}{% endif %}">
-    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -198,15 +198,15 @@
 
             {% if not user %}
             <!-- Signup modal shown to anonymous users when they try premium features -->
-            <div class="signup-modal" id="signupModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
-                <div class="signup-modal-card" style="background:#11131a; border:1px solid rgba(255,45,85,0.3); border-radius:1rem; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <div class="signup-modal" id="signupModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(15,23,42,0.45); align-items:center; justify-content:center;">
+                <div class="signup-modal-card" style="background:#ffffff; border:1px solid var(--border); border-radius:1rem; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(15,23,42,0.12);">
                     <div style="font-size:2rem; margin-bottom:0.5rem;">🔒</div>
                     <h2 id="signupModalTitle" style="margin:0 0 0.5rem; font-size:1.5rem;">Débloquez tout gratuitement</h2>
-                    <p style="color:#a0a0b0; margin-bottom:1.5rem;">
+                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">
                         Créez un compte gratuit pour obtenir :<br>
                         <strong id="signupModalSub">3 crédits par mois · MP3 · HD 1080p · Découpe</strong>
                     </p>
-                    <ul style="text-align:left; color:#c8c8d8; font-size:0.95rem; margin:0 0 1.5rem; padding-left:1.2rem;">
+                    <ul style="text-align:left; color:var(--text-muted); font-size:0.95rem; margin:0 0 1.5rem; padding-left:1.2rem;">
                         <li>Télécharger en MP3 / MP4 HD</li>
                         <li>Couper des extraits précis</li>
                         <li>Sauvegarder votre historique</li>
@@ -214,7 +214,7 @@
                     </ul>
                     <a href="/signup" class="btn-cta full-width" style="margin-bottom:0.75rem; display:block;">Créer un compte gratuit →</a>
                     <a href="/pricing" class="btn-secondary" style="display:block; margin-bottom:0.75rem;">Voir les plans Premium</a>
-                    <button onclick="document.getElementById('signupModal').style.display='none'" style="background:none; border:none; color:#888; cursor:pointer; font-size:0.9rem;">Continuer avec la version gratuite</button>
+                    <button onclick="document.getElementById('signupModal').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem;">Continuer avec la version gratuite</button>
                 </div>
             </div>
             {% endif %}
@@ -648,11 +648,11 @@
     <div class="signup-modal-card" style="background:#11131a; border:1px solid rgba(255,45,85,0.35); border-radius:1.2rem; padding:2.2rem; max-width:460px; width:90%; text-align:center; box-shadow:0 25px 80px rgba(0,0,0,0.6);">
         <div style="font-size:2.2rem; margin-bottom:0.5rem;">🎁</div>
         <h2 style="margin:0 0 0.5rem; font-size:1.6rem;">Attendez ! 3 crédits offerts</h2>
-        <p style="color:#a0a0b0; margin-bottom:1.5rem;">Créez un compte gratuit maintenant et débloquez <strong>MP3, HD et la découpe</strong>. Sans engagement.</p>
+        <p style="color:var(--text-muted); margin-bottom:1.5rem;">Créez un compte gratuit maintenant et débloquez <strong>MP3, HD et la découpe</strong>. Sans engagement.</p>
         <div style="font-size:2rem; font-weight:800; color:#ff2d55; margin-bottom:1.2rem;">-20% sur votre 1er mois Premium</div>
         <a href="/signup" class="btn-cta full-width" style="margin-bottom:0.75rem; display:block;">Créer mon compte gratuit →</a>
         <a href="/pricing" class="btn-secondary" style="display:block; margin-bottom:0.75rem;">Voir les tarifs</a>
-        <button onclick="document.getElementById('exit-popup').style.display='none'" style="background:none; border:none; color:#888; cursor:pointer; font-size:0.9rem;">Non merci, je préfère rester anonyme</button>
+        <button onclick="document.getElementById('exit-popup').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem;">Non merci, je préfère rester anonyme</button>
     </div>
 </div>
 {% endif %}

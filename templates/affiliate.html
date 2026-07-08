@@ -6,7 +6,7 @@
     <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
     <title>Programme d'affiliation Yestubers — 30% de commission</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="/static/css/style.min.css?v=10">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -87,7 +87,7 @@
     <section id="apply" class="container" style="padding:3rem 1rem;">
         <div class="converter-card" style="max-width:520px; margin:0 auto;">
             <h2 style="text-align:center; margin-bottom:0.5rem;">Demandez votre lien affilié</h2>
-            <p style="color:#a0a0b0; text-align:center; margin-bottom:1.5rem;">Remplissez le formulaire. Notre équipe valide sous 24h et vous envoie votre lien unique.</p>
+            <p style="color:var(--text-muted); text-align:center; margin-bottom:1.5rem;">Remplissez le formulaire. Notre équipe valide sous 24h et vous envoie votre lien unique.</p>
             <form id="affiliate-form">
                 <label>Email</label>
                 <input type="email" name="email" required placeholder="vous@email.com" value="{{ user.email if user else '' }}" />
@@ -101,7 +101,7 @@
         </div>
     </section>
 
-    <section class="container" style="max-width:800px; padding:2rem 1rem 4rem; color:#c8c8d8;">
+    <section class="container" style="max-width:800px; padding:2rem 1rem 4rem; color:var(--text-muted);">
         <h2>Comment ça marche ?</h2>
         <ol style="padding-left:1.2rem; line-height:1.8;">
             <li><strong>Inscrivez-vous</strong> au programme d'affiliation via le formulaire.</li>
