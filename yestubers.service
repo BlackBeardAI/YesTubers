@@ -1,17 +1,14 @@
 [Unit]
-Description=YT Cut — YouTube Video Downloader & Cutter SaaS
+Description=YesTubers — YouTube Video Downloader & Cutter SaaS
 After=network.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/yestubers
-Environment="PATH=/opt/yestubers/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-Environment="SECRET_KEY=change-me-to-random-64-chars"
-Environment="STRIPE_PUBLIC_KEY=pk_live_..."
-Environment="STRIPE_SECRET_KEY=sk_live_..."
-Environment="STRIPE_WEBHOOK_SECRET=whsec_..."
-ExecStart=/opt/yestubers/venv/bin/python3 /opt/yestubers/main.py
+WorkingDirectory=/opt/ytcut
+EnvironmentFile=/opt/ytcut/.env
+Environment="PATH=/opt/ytcut/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/opt/ytcut/venv/bin/python3 /opt/ytcut/main.py
 Restart=always
 RestartSec=5
 

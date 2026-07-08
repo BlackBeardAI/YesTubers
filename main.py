@@ -2630,6 +2630,7 @@ for _lang in SUPPORTED_LOCALES:
 # ─── Routes Web ───────────────────────────────────────────────────────────────
 
 @app.get("/", response_class=HTMLResponse)
+@app.head("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
     i18n = translate_dict(request)
