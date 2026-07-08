@@ -1,109 +1,18 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
-    <title>À propos — Yestubers</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="manifest" href="/static/manifest.json">
+{% extends "base.html" %}
 
-    <meta name="description" content="Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.">
+{% block title %}À propos — Yestubers{% endblock %}
+{% block description %}Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.{% endblock %}
+{% block og_title %}À propos — Yestubers{% endblock %}
+{% block og_description %}Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.{% endblock %}
+{% block twitter_title %}À propos — Yestubers{% endblock %}
+{% block twitter_description %}Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.{% endblock %}
+{% block body_class %}about{% endblock %}
 
-    <meta property="og:title" content="À propos">
-    <meta property="og:description" content="Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.">
-    <meta property="og:url" content="https://yestubers.cloud/about">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Yestubers">
-    <meta property="og:locale" content="{{ locale }}_{{ i18n['_og_region'] }}">
-    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:type" content="image/png">
-    
+{% block content %}
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="À propos">
-    <meta name="twitter:description" content="Yestubers — le convertisseur YouTube gratuit le plus rapide. Découvrez notre mission, notre technologie et notre équipe.">
-    <meta name="twitter:image" content="https://yestubers.cloud/static/og-image.png"><meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://yestubers.cloud/about">
-    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Yestubers",
-        "url": "https://yestubers.cloud/",
-        "logo": "https://yestubers.cloud/static/favicon.svg",
-        "sameAs": [],
-        "contactPoint": {
-            "@type": "ContactPoint",
-            "email": "contact@yestubers.cloud",
-            "contactType": "customer support"
-        }
-    }
-    </script>
-
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Yestubers",
-        "url": "https://yestubers.cloud/",
-        "description": "Convertisseur YouTube MP3/MP4 gratuit et rapide.",
-        "applicationCategory": "MultimediaApplication",
-        "operatingSystem": "All",
-        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
-        "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.8", "ratingCount": "1250"},
-        "author": {"@type": "Organization", "name": "Yestubers"}
-    }
-    </script>
-
-    {% for loc in i18n["_supported"] %}
-    <link rel="alternate" hreflang="{{ loc }}" href="https://yestubers.cloud/{% if loc != 'en' %}{{ loc }}/{% endif %}{{ page_path }}" />
-    {% endfor %}
-    <link rel="alternate" hreflang="x-default" href="https://yestubers.cloud/{{ page_path }}" />
-</head>
-<body>
     <div class="ambient-bg"></div>
 
-    <nav class="navbar">
-    <div class="container nav-container">
-        <a href="/" class="logo">
-            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
-                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
-                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
-            </svg>
-            <span>Yestubers</span>
-        </a>
-
-        <div class="nav-links" id="nav-links">
-            <a href="/pricing">{{ i18n.nav_pricing if 'nav_pricing' in i18n else 'Pricing' }}</a>
-            {% if user is defined and user %}
-            <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
-            <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Logout' }}</a>
-            {% else %}
-            <a href="/login">{{ i18n.nav_login if 'nav_login' in i18n else 'Login' }}</a>
-            <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup if 'nav_signup' in i18n else 'Try free' }}</a>
-            {% endif %}
-        </div>
-
-        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-        </button>
-    </div>
-</nav>
+    
 
     <section class="page-header">
         <div class="container">
@@ -157,40 +66,7 @@
         </div>
     </section>
 
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <div class="logo"><span>Yestubers</span></div>
-                    <p>Le convertisseur vidéo simple, rapide et respectueux de votre vie privée.</p>
-                </div>
-                <div class="footer-links">
-                    <h4>Produit</h4>
-                    <a href="/pricing">Tarifs</a>
-                    {% if user is defined and user %}
-                    <a href="/dashboard">Dashboard</a>
-                    <a href="#" onclick="logout(); return false;">Déconnexion</a>
-                    {% else %}
-                    <a href="/login">Connexion</a>
-                    <a href="/signup">Inscription</a>
-                    {% endif %}
-                </div>
-                <div class="footer-links">
-                    <h4>Légal</h4>
-                    <a href="/terms">CGU</a>
-                    <a href="/privacy">Confidentialité</a>
-                    <a href="/dmca">DMCA</a>
-                </div>
-                <div class="footer-links">
-                    <h4>Aide</h4>
-                    <a href="/about">À propos</a>
-                    <a href="/contact">Contact</a>
-                    <a href="/#faq">FAQ</a>
-                </div>
-            </div>
-            <div class="footer-bottom"><p>© 2026 Yestubers. Tous droits réservés.</p></div>
-        </div>
-    </footer>
+    
 
     <script>
     function logout() { fetch('/api/auth/logout', {method:'POST'}).then(() => location.href='/'); }
@@ -220,5 +96,5 @@
     });
 })();
 </script>
-</body>
-</html>
+
+{% endblock %}

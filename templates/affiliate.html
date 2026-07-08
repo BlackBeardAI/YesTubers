@@ -1,51 +1,23 @@
-<!DOCTYPE html>
-<html lang="{{ locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
-    <title>Programme d'affiliation Yestubers — 30% de commission</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+{% extends "base.html" %}
 
-    <meta name="description" content="Gagnez 30% de commission récurrente en parrainant des clients Yestubers. Inscription gratuite au programme d'affiliation.">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://yestubers.cloud/affiliate">
+{% block title %}Programme d'affiliation Yestubers — 30% de commission{% endblock %}
+{% block description %}Gagnez 30% de commission récurrente en parrainant des clients Yestubers. Inscription gratuite au programme d'affiliation.{% endblock %}
+{% block og_title %}Programme d'affiliation Yestubers — 30% de commission{% endblock %}
+{% block og_description %}Gagnez 30% de commission récurrente en parrainant des clients Yestubers. Inscription gratuite au programme d'affiliation.{% endblock %}
+{% block twitter_title %}Programme d'affiliation Yestubers — 30% de commission{% endblock %}
+{% block twitter_description %}Gagnez 30% de commission récurrente en parrainant des clients Yestubers. Inscription gratuite au programme d'affiliation.{% endblock %}
+{% block body_class %}{% endblock %}
 
-    <meta property="og:title" content="Programme d'affiliation Yestubers — 30% de commission">
-    <meta property="og:description" content="Gagnez 30% de commission récurrente en parrainant des clients Yestubers.">
-    <meta property="og:url" content="https://yestubers.cloud/affiliate">
-    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
-</head>
-<body>
+{% block content %}
+
     <div class="ambient-bg"></div>
 
-    <nav class="navbar">
-        <div class="container nav-container">
-            <a href="/" class="logo"><svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
-                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
-                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
-            </svg><span>Yestubers</span></a>
-            <div class="nav-links" id="nav-links">
-                <a href="/">Accueil</a>
-                <a href="/pricing">Tarifs</a>
-                <a href="/affiliate" class="active">Affiliation</a>
-                {% if user %}<a href="/dashboard">Dashboard</a><a href="#" onclick="logout(); return false;">Logout</a>
-                {% else %}<a href="/login">Login</a><a href="/signup" class="btn-sm btn-primary">Sign up</a>
-                {% endif %}
-            </div>
-            <button class="nav-toggle" id="nav-toggle" aria-label="Menu"><span class="hamburger-line"></span><span class="hamburger-line"></span><span class="hamburger-line"></span></button>
-        </div>
-    </nav>
+    
 
     <section class="hero" style="padding:5rem 0 3rem;">
         <div class="container" style="text-align:center;">
             <div class="hero-badge"><span class="pulse"></span><span>Programme d'affiliation ouvert</span></div>
-            <h1 style="font-size:2.8rem; margin-bottom:1rem;">Gagnez <span style="color:#ff2d55;">30%</span> de commission récurrente</h1>
+            <h1 style="font-size:2.8rem; margin-bottom:1rem;">Gagnez <span style="color:var(--primary);">30%</span> de commission récurrente</h1>
             <p class="hero-subtitle" style="max-width:640px; margin:0 auto 1.5rem;">Parrainez des créateurs, des monteurs, des podcasteurs. Vous touchez 30% de chaque paiement client, tous les mois, tant qu'il reste abonné.</p>
             <a href="#apply" class="btn-cta btn-lg">Devenir affilié →</a>
         </div>
@@ -118,11 +90,7 @@
         </ul>
     </section>
 
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-bottom center"><p>© 2026 Yestubers. Tous droits réservés.</p></div>
-        </div>
-    </footer>
+    
 
     <script>
     document.getElementById('affiliate-form').addEventListener('submit', async (e) => {
@@ -145,5 +113,5 @@
         }
     });
     </script>
-</body>
-</html>
+
+{% endblock %}

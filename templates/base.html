@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
+    <title>{% block title %}{{ i18n.brand }}{% endblock %}</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+
+    <meta name="description" content="{% block description %}{{ i18n.brand }} — YouTube downloader{% endblock %}">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    <meta name="author" content="Yestubers">
+    <link rel="canonical" href="https://yestubers.cloud{% block canonical %}{% if request %}{{ request.url.path }}{% endif %}{% endblock %}">
+    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    {% block extra_meta %}{% endblock %}
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{% block og_title %}{{ i18n.brand }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ i18n.brand }}{% endblock %}">
+    <meta property="og:url" content="https://yestubers.cloud{% block og_url %}{% if request %}{{ request.url.path }}{% endif %}{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Yestubers">
+    <meta property="og:locale" content="{{ locale }}_{{ i18n.get("_og_region", "US") }}">
+    <meta property="og:image" content="{% block og_image %}https://yestubers.cloud/static/og-image.png{% endblock %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ i18n.brand }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ i18n.brand }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}https://yestubers.cloud/static/og-image.png{% endblock %}">
+
+    {% block extra_css %}{% endblock %}
+    {% block head_jsonld %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
+                    <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
+                    <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
+                </svg>
+                <span>Yestubers</span>
+            </a>
+            <div class="nav-links" id="nav-links">
+                <a href="/pricing">{{ i18n.nav_pricing }}</a>
+                <a href="/mp3">MP3</a>
+                <a href="/mp4">MP4</a>
+                <a href="/cut-youtube-video">{{ i18n.nav_cut if "nav_cut" in i18n else "Couper" }}</a>
+                <a href="/affiliate">{{ i18n.nav_affiliate if "nav_affiliate" in i18n else "Affiliation" }}</a>
+                {% if user %}
+                <a href="/dashboard">{{ i18n.nav_dashboard }}</a>
+                <a href="/settings">{{ i18n.nav_settings }}</a>
+                <a href="/api/auth/logout">{{ i18n.nav_logout }}</a>
+                {% else %}
+                <a href="/login" class="btn-login">{{ i18n.nav_login }}</a>
+                <a href="/signup" class="btn-primary btn-signup">{{ i18n.nav_signup }}</a>
+                {% endif %}
+            </div>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-links">
+                    <h4>Outils</h4>
+                    <a href="/youtube-to-mp3">YouTube MP3</a>
+                    <a href="/youtube-to-mp4">YouTube MP4</a>
+                    <a href="/cut-youtube-video">{{ i18n.nav_cut if "nav_cut" in i18n else "Couper" }}</a>
+                    <a href="/download-youtube-video">YouTube Downloader</a>
+                    <a href="/convert-youtube-mp3">Convertir YouTube MP3</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Produit</h4>
+                    <a href="/pricing">{{ i18n.nav_pricing }}</a>
+                    <a href="/signup">{{ i18n.nav_signup }}</a>
+                    <a href="/login">{{ i18n.nav_login }}</a>
+                    <a href="/affiliate">{{ i18n.nav_affiliate if "nav_affiliate" in i18n else "Affiliation" }}</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Légal</h4>
+                    <a href="/terms">{{ i18n.nav_terms }}</a>
+                    <a href="/privacy">{{ i18n.nav_privacy }}</a>
+                    <a href="/dmca">DMCA</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Contact</h4>
+                    <a href="mailto:blackbeardai@proton.me">blackbeardai@proton.me</a>
+                    <a href="/contact">{{ i18n.nav_contact or "Contact" }}</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© {{ datetime.utcnow().year }} Yestubers. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.min.js?v=11"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,101 +1,19 @@
-<!DOCTYPE html>
-<html lang="{{ locale }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
-    <title>{{ i18n.title_home }} | {{ i18n.brand }}</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="manifest" href="/static/manifest.json">
+{% extends "base.html" %}
 
-    <meta name="description" content="{{ i18n.desc_home }}">
-    <meta name="keywords" content="yestubers, youtube mp3, youtube mp4, telecharger video youtube, convertisseur youtube, youtube downloader, descargar youtube, scaricare youtube, baixar youtube, 下载 YouTube">
-    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-    <meta name="author" content="Yestubers">
-    <link rel="canonical" href="https://yestubers.cloud/{% if locale != 'en' %}{{ locale }}{% endif %}">
-    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+{% block title %}{{ i18n.title_home }} | {{ i18n.brand }}{% endblock %}
+{% block description %}{{ i18n.desc_home }}{% endblock %}
+{% block og_title %}{{ i18n.title_home }} | {{ i18n.brand }}{% endblock %}
+{% block og_description %}{{ i18n.desc_home }}{% endblock %}
+{% block twitter_title %}{{ i18n.title_home }} | {{ i18n.brand }}{% endblock %}
+{% block twitter_description %}{{ i18n.desc_home }}{% endblock %}
+{% block body_class %}home{% endblock %}
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="{{ i18n.title_home }} | {{ i18n.brand }}">
-    <meta property="og:description" content="{{ i18n.desc_home }}">
-    <meta property="og:url" content="https://yestubers.cloud/{% if locale != 'en' %}{{ locale }}{% endif %}">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Yestubers">
-    <meta property="og:locale" content="{{ locale }}_{{ i18n['_og_region'] }}">
-    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:type" content="image/png">
+{% block content %}
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ i18n.title_home }} | {{ i18n.brand }}">
-    <meta name="twitter:description" content="{{ i18n.desc_home }}">
-
-    <!-- Hreflang -->
-    {% for loc in i18n['_supported'] %}
-    <link rel="alternate" hreflang="{{ loc }}" href="https://yestubers.cloud/{% if loc != 'en' %}{{ loc }}{% endif %}" />
-    {% endfor %}
-    <link rel="alternate" hreflang="x-default" href="https://yestubers.cloud/" />
-
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Yestubers",
-        "url": "https://yestubers.cloud/",
-        "description": "{{ i18n.desc_home }}",
-        "applicationCategory": "MultimediaApplication",
-        "operatingSystem": "All",
-        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "EUR"},
-        "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.9", "ratingCount": "28471"},
-        "author": {"@type": "Organization", "name": "Yestubers"}
-    }
-    </script>
-</head>
-<body class="home">
     <!-- Animated gradient background -->
     <div class="ambient-bg"></div>
 
-    <nav class="navbar">
-    <div class="container nav-container">
-        <a href="/" class="logo">
-            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
-                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
-                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
-            </svg>
-            <span>Yestubers</span>
-        </a>
-
-        <div class="nav-links" id="nav-links">
-            <a href="/pricing">{{ i18n.nav_pricing }}</a>
-            <a href="/mp3">MP3</a>
-            <a href="/mp4">MP4</a>
-            <a href="/cut">Cut</a>
-            <a href="/affiliate">Affiliation</a>
-            {% if user is defined and user %}
-            <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
-            <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Logout' }}</a>
-            {% else %}
-            <a href="/login">{{ i18n.nav_login }}</a>
-            <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup }}</a>
-            {% endif %}
-        </div>
-
-        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-        </button>
-    </div>
-</nav>
+    
 
 {% if anon %}
 <div class="anon-top-banner" id="anonTopBanner">
@@ -154,7 +72,7 @@
                                     {% if not anon %}<option value="wav">WAV — Lossless</option>{% endif %}
                                 </optgroup>
                             </select>
-                            <p id="anon-limit-msg" class="anon-limit" style="display:none; margin:0.25rem 0 0; font-size:0.8rem; color:#ff2d55;">🔒 MP3, HD et le cutter nécessitent un compte gratuit.</p>
+                            <p id="anon-limit-msg" class="anon-limit" style="display:none; margin:0.25rem 0 0; font-size:0.8rem; color:var(--primary);">🔒 MP3, HD et le cutter nécessitent un compte gratuit.</p>
                         </div>
 
                         <label class="toggle">
@@ -337,49 +255,7 @@
         </div>
     </section>
 
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-brand">
-                    <div class="logo">
-                        <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
-                            <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
-                            <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
-                            <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
-                        </svg>
-                        <span>Yestubers</span>
-                    </div>
-                    <p>{{ i18n.footer_tagline }}</p>
-                </div>
-                <div class="footer-links">
-                    <h4>{{ i18n.footer_product }}</h4>
-                    <a href="/pricing">{{ i18n.nav_pricing }}</a>
-                    {% if user is defined and user %}
-                    <a href="/dashboard">{{ i18n.nav_dashboard if 'nav_dashboard' in i18n else 'Dashboard' }}</a>
-                    <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout if 'nav_logout' in i18n else 'Déconnexion' }}</a>
-                    {% else %}
-                    <a href="/login">{{ i18n.nav_login }}</a>
-                    <a href="/signup">{{ i18n.signup }}</a>
-                    {% endif %}
-                </div>
-                <div class="footer-links">
-                    <h4>{{ i18n.footer_legal }}</h4>
-                    <a href="/terms">{{ i18n.terms }}</a>
-                    <a href="/privacy">{{ i18n.privacy }}</a>
-                    <a href="/dmca">{{ i18n.dmca }}</a>
-                </div>
-                <div class="footer-links">
-                    <h4>{{ i18n.footer_help }}</h4>
-                    <a href="/about">{{ i18n.nav_about }}</a>
-                    <a href="/contact">{{ i18n.contact }}</a>
-                    <a href="/#faq">{{ i18n.faq }}</a>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>© 2026 Yestubers. Tous droits réservés.</p>
-            </div>
-        </div>
-    </footer>
+    
 
     <!-- Cookie consent -->
     <div class="cookie-banner" id="cookie-banner" style="display:none;">
@@ -388,7 +264,7 @@
     </div>
 
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="/static/js/main.min.js?v=10"></script>
+    
     <script>
     // Tab switching
     function switchTab(tab) {
@@ -645,11 +521,11 @@
 {% if not user %}
 <!-- Exit-intent popup -->
 <div class="signup-modal" id="exit-popup" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.88); align-items:center; justify-content:center;">
-    <div class="signup-modal-card" style="background:#11131a; border:1px solid rgba(255,45,85,0.35); border-radius:1.2rem; padding:2.2rem; max-width:460px; width:90%; text-align:center; box-shadow:0 25px 80px rgba(0,0,0,0.6);">
+    <div class="signup-modal-card" style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:1.2rem; padding:2.2rem; max-width:460px; width:90%; text-align:center; box-shadow:0 25px 80px rgba(0,0,0,0.6);">
         <div style="font-size:2.2rem; margin-bottom:0.5rem;">🎁</div>
         <h2 style="margin:0 0 0.5rem; font-size:1.6rem;">Attendez ! 3 crédits offerts</h2>
         <p style="color:var(--text-muted); margin-bottom:1.5rem;">Créez un compte gratuit maintenant et débloquez <strong>MP3, HD et la découpe</strong>. Sans engagement.</p>
-        <div style="font-size:2rem; font-weight:800; color:#ff2d55; margin-bottom:1.2rem;">-20% sur votre 1er mois Premium</div>
+        <div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1.2rem;">-20% sur votre 1er mois Premium</div>
         <a href="/signup" class="btn-cta full-width" style="margin-bottom:0.75rem; display:block;">Créer mon compte gratuit →</a>
         <a href="/pricing" class="btn-secondary" style="display:block; margin-bottom:0.75rem;">Voir les tarifs</a>
         <button onclick="document.getElementById('exit-popup').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem;">Non merci, je préfère rester anonyme</button>
@@ -657,5 +533,5 @@
 </div>
 {% endif %}
 
-</body>
-</html>
+
+{% endblock %}

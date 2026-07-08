@@ -1,73 +1,18 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
-    <title>Connexion — Yestubers</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="manifest" href="/static/manifest.json">
+{% extends "base.html" %}
 
-    <meta name="description" content="Connectez-vous à votre compte Yestubers pour accéder à vos téléchargements, découpage vidéo et crédits.">
+{% block title %}Connexion — Yestubers{% endblock %}
+{% block description %}Connectez-vous à votre compte Yestubers pour accéder à vos téléchargements, découpage vidéo et crédits.{% endblock %}
+{% block og_title %}Connexion — Yestubers{% endblock %}
+{% block og_description %}Connectez-vous à votre compte Yestubers pour accéder à vos téléchargements, découpage vidéo et crédits.{% endblock %}
+{% block twitter_title %}Connexion — Yestubers{% endblock %}
+{% block twitter_description %}Connectez-vous à votre compte Yestubers pour accéder à vos téléchargements, découpage vidéo et crédits.{% endblock %}
+{% block body_class %}auth{% endblock %}
 
-    <meta property="og:title" content="Connexion">
-    <meta property="og:description" content="Connectez-vous à votre compte Yestubers pour accéder à vos téléchargements, découpage vidéo et crédits.">
-    <meta property="og:url" content="https://yestubers.cloud/login">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Yestubers">
-    <meta property="og:locale" content="fr_FR">
-    <meta property="og:image" content="https://yestubers.cloud/static/og-image.png">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-    <meta property="og:image:type" content="image/png">
-    
+{% block content %}
 
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Connexion">
-    <meta name="twitter:description" content="Connectez-vous à votre compte Yestubers pour accéder à vos téléchargements, découpage vidéo et crédits.">
-    <meta name="twitter:image" content="https://yestubers.cloud/static/og-image.png"><meta name="robots" content="noindex, follow">
-    <link rel="canonical" href="https://yestubers.cloud/login">
-    <link rel="stylesheet" href="/static/css/style.min.css?v=11">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-</head>
-<body>
     <div class="ambient-bg"></div>
 
-    <nav class="navbar">
-    <div class="container nav-container">
-        <a href="/" class="logo">
-            <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="2" y="5" width="20" height="14" rx="3" fill="currentColor" fill-opacity="0.2"/>
-                <path d="M10 9.5L15 12L10 14.5V9.5Z" fill="currentColor"/>
-                <rect x="6" y="19" width="12" height="2" rx="1" fill="currentColor" fill-opacity="0.4"/>
-            </svg>
-            <span>Yestubers</span>
-        </a>
-
-        <div class="nav-links" id="nav-links">
-            <a href="/pricing">{{ i18n.nav_pricing }}</a>
-            {% if user is defined and user %}
-            <a href="/dashboard">{{ i18n.nav_dashboard }}</a>
-            <a href="#" onclick="logout(); return false;">{{ i18n.nav_logout }}</a>
-            {% else %}
-            <a href="/login">{{ i18n.nav_login }}</a>
-            <a href="/signup" class="btn-sm btn-primary">{{ i18n.nav_signup }}</a>
-            {% endif %}
-        </div>
-
-        <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-        </button>
-    </div>
-</nav>
+    
 
     <section class="auth-section">
         <div class="auth-card">
@@ -88,11 +33,7 @@
         </div>
     </section>
 
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-bottom center"><p>© 2026 Yestubers. Tous droits réservés.</p></div>
-        </div>
-    </footer>
+    
 
     <script>
     document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -135,5 +76,5 @@
     });
 })();
 </script>
-</body>
-</html>
+
+{% endblock %}

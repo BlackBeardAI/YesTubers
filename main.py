@@ -274,13 +274,6 @@ async def download_public(url: str, fmt: str, quality: str, max_duration: int = 
     stdout, stderr = await proc.communicate()
     if proc.returncode != 0:
         err = stderr.decode()
-        if "403" in err or "forbidden" in err.lower() or "sign in" in err.lower():
-            inv = fetch_invidious(extract_video_id(url))
-            if inv:
-                max_h = 360
-                data = await download_invidious(vid_db, inv, max_h)
-                data["title"] = re.sub(r'[^\w\-. ]', '_', inv.get("title", "video"))[:50]
-                return data
         raise Exception(f"Erreur yt-dlp: {err[:200]}")
 
     # Rename if yt-dlp created base path without proper extension
@@ -2428,8 +2421,6 @@ async def download_video(url: str, video_id_db: str, max_duration: int = 60, qua
     cmd = [
         "yt-dlp"
     ] + js_runtime + [
-        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-        "--referer", "https://www.youtube.com/",
         "-f", f"best[height<={max_height}][ext=mp4]/best[height<={max_height}]/best",
         "--no-playlist",
         "-o", str(out_path),
@@ -2441,15 +2432,7 @@ async def download_video(url: str, video_id_db: str, max_duration: int = 60, qua
     stdout, stderr = await proc.communicate()
 
     if proc.returncode != 0:
-        # Fallback Invidious si YouTube bloque le serveur
         yt_error = stderr.decode()
-        err_l = yt_error.lower()
-        if any(k in err_l for k in ("unavailable", "sign in", "private", "403", "forbidden", "http error 403")):
-            inv = fetch_invidious(extract_video_id(url))
-            if inv:
-                quality_map = {"480": 480, "720": 720, "1080": 1080, "4K": 2160}
-                max_h = quality_map.get(quality, 480)
-                return await download_invidious(video_id_db, inv, max_h)
         raise Exception(f"Erreur téléchargement: {yt_error}")
 
     # Extraire thumbnail
@@ -2647,14 +2630,18 @@ async def reset_page(request: Request):
 
 @app.get("/reset-password", response_class=HTMLResponse)
 async def reset_password_page(request: Request):
-    return HTMLResponse(_jinja_env.get_template("reset-password.html").render(request=request, token=request.query_params.get("token", "")))
+    i18n = translate_dict(request)
+    return HTMLResponse(_jinja_env.get_template("reset-password.html").render(
+        request=request, token=request.query_params.get("token", ""), i18n=i18n, locale=i18n["_locale"]))
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
     if not user:
         return RedirectResponse("/login")
-    return HTMLResponse(_jinja_env.get_template("settings.html").render(request=request, user=user))
+    i18n = translate_dict(request)
+    return HTMLResponse(_jinja_env.get_template("settings.html").render(
+        request=request, user=user, i18n=i18n, locale=i18n["_locale"]))
 
 @app.get("/affiliate", response_class=HTMLResponse)
 async def affiliate_page(request: Request, db: Session = Depends(get_db)):
@@ -4428,16 +4415,19 @@ async def api_download(
         allowed_qualities = PLANS[user.plan].get("quality_options", [PLANS[user.plan]["quality"]])
         chosen_quality = quality if quality in allowed_qualities else PLANS[user.plan]["quality"]
 
-        # Map frontend format tokens to backend quality / audio format
-        fmt_token = (format or "mp4").lower()
+        # Normalize frontend format tokens
+        fmt_token = (format or "mp4").lower().replace("audio/", "").replace("video/", "")
         quality_map = {"mp4": chosen_quality, "mp4-hd": "720", "mp4-hd1080": "1080", "mp4-2k": "1440", "mp4-4k": "2160"}
         audio_formats = {"mp3", "mp3-hd", "m4a", "wav"}
+        video_formats = {"mp4", "video"}
         if fmt_token in quality_map:
             chosen_quality = quality_map[fmt_token]
             fmt = "mp4"
         elif fmt_token in audio_formats:
             fmt = "mp3" if fmt_token.startswith("mp3") else ("m4a" if fmt_token == "m4a" else "wav")
-            # default audio chosen_quality not used, but keep valid
+            chosen_quality = quality if quality in allowed_qualities else PLANS[user.plan]["quality"]
+        elif fmt_token in video_formats or "video" in fmt_token or "mp4" in fmt_token:
+            fmt = "mp4"
             chosen_quality = quality if quality in allowed_qualities else PLANS[user.plan]["quality"]
         else:
             fmt = "mp4"
@@ -4955,8 +4945,9 @@ async def api_thumbnail(filename: str):
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
+    i18n = translate_dict(request)
     return HTMLResponse(
-        _jinja_env.get_template("404.html").render(request=request),
+        _jinja_env.get_template("404.html").render(request=request, i18n=i18n, locale=i18n["_locale"]),
         status_code=404
     )
 
@@ -4992,8 +4983,9 @@ async def catch_all(request: Request, path: str, db: Session = Depends(get_db)):
         return RedirectResponse(url=f"/{subpath}?lang={loc}", status_code=307)
 
     # Otherwise 404
+    i18n = translate_dict(request)
     return HTMLResponse(
-        _jinja_env.get_template("404.html").render(request=request),
+        _jinja_env.get_template("404.html").render(request=request, i18n=i18n, locale=i18n["_locale"]),
         status_code=404
     )
 

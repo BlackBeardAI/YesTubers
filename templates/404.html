@@ -1,20 +1,10 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="AvWphSlYq5L0gPM3YuITGgVOM9MbmFGRJo_sS9eQX-Y" />
-    <title>Page introuvable — Yestubers</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="manifest" href="/static/manifest.json">
+{% extends "base.html" %}
 
-    <meta name="robots" content="noindex, follow">
-    <link rel="stylesheet" href="/static/css/style.css?v=10">
-</head>
-<body>
+{% block title %}Page introuvable — Yestubers{% endblock %}
+{% block description %}Page non trouvée{% endblock %}
+
+{% block content %}
+
     <nav class="navbar">
         <div class="container">
             <a href="/" class="logo">Yestubers</a>
@@ -40,5 +30,5 @@
             <p>Yestubers &copy; 2026</p>
         </div>
     </footer>
-</body>
-</html>
+
+{% endblock %}
