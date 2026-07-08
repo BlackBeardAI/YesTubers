@@ -353,8 +353,8 @@ LOCALE_REGION = {
 I18N = {
     "fr": {
         "brand": "Yestubers",
-        "title_home": "Téléchargeur YouTube MP3/MP4 Gratuit",
-        "desc_home": "Yestubers est le convertisseur YouTube le plus rapide. Téléchargez n'importe quelle vidéo en MP3, MP4, M4A ou WAV sans inscription.",
+        "title_home": "YouTube Downloader — Téléchargeur MP3/MP4 Gratuit",
+        "desc_home": "Téléchargez des vidéos YouTube gratuitement avec Yestubers, le meilleur YouTube downloader. MP3 192 kbps, MP4 HD, sans inscription, 3 crédits offerts.",
         "compare_title": "Gratuit vs Creator",
         "feature": "Fonction",
         "free": "Gratuit",
@@ -487,8 +487,8 @@ I18N = {
     },
     "en": {
         "brand": "Yestubers",
-        "title_home": "Free YouTube MP3/MP4 Downloader",
-        "desc_home": "Yestubers is the fastest YouTube converter. Download any video as MP3, MP4, M4A or WAV with no signup.",
+        "title_home": "YouTube Downloader — Free MP3/MP4",
+        "desc_home": "Free YouTube downloader for MP3 and MP4. Download any YouTube video in HD or audio. No signup needed, 3 free credits per month.",
         "compare_title": "Free vs Creator",
         "feature": "Feature",
         "free": "Free",
@@ -3190,7 +3190,825 @@ LP_PAGES: dict[str, dict] = {
             {"url": "/youtube-cutter", "label": "YouTube Cutter"},
         ],
     },
+
+    "youtube-video-downloader": {
+            "template": "lp_base.html",
+            "slug": "youtube-video-downloader",
+            "canonical_path": "/youtube-video-downloader",
+            "title": "YouTube Video Downloader — MP4 HD Free | Yestubers",
+            "description": "The fastest YouTube video downloader. Save any YouTube video as MP4 HD. Free account with 3 credits per month. No software needed.",
+            "h1": "YouTube Video Downloader",
+            "subtitle": "Download any YouTube video in MP4 HD. Paste the link, choose quality, get your file.",
+            "badge": "MP4 HD · Free · No watermark",
+            "placeholder": "Paste a YouTube video link...",
+            "cta": "Download Video",
+            "tool_format": "mp4",
+            "show_cut_options": False,
+            "h2": "Best YouTube video downloader online",
+            "lead": "Yestubers lets you download any YouTube video as a clean MP4 file. HD quality, no ads, no signup required for the first tries.",
+            "features": [
+                {
+                    "title": "MP4 HD",
+                    "text": "Download in 720p, 1080p or 4K depending on your plan.",
+                },
+                {
+                    "title": "No watermark",
+                    "text": "Get a clean video file without any branding.",
+                },
+                {
+                    "title": "Fast",
+                    "text": "Servers optimized for quick conversion and download.",
+                },
+                {
+                    "title": "3 free credits",
+                    "text": "Sign up to get 3 downloads per month for free.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube video URL.",
+                "Paste it into the downloader field.",
+                "Click Download and choose your quality.",
+            ],
+            "why": "Unlike cluttered sites, Yestubers gives a fast, safe and ad-light experience for downloading YouTube videos.",
+            "faqs": [
+                {
+                    "question": "Is this YouTube video downloader free?",
+                    "answer": "Yes, you get 2 tries without an account and 3 free credits per month after signing up.",
+                },
+                {
+                    "question": "Can I download in HD?",
+                    "answer": "Yes, registered users can download in HD quality based on their plan.",
+                },
+                {
+                    "question": "Is it safe?",
+                    "answer": "Yes, Yestubers does not use malicious ads and does not store your files permanently.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+                {
+                    "url": "/youtube-downloader",
+                    "label": "YouTube Downloader",
+                },
+            ],
+        },
+    "youtube-converter": {
+            "template": "lp_base.html",
+            "slug": "youtube-converter",
+            "canonical_path": "/youtube-converter",
+            "title": "YouTube Converter — MP3/MP4 Free Online | Yestubers",
+            "description": "Free YouTube converter for MP3 and MP4. Convert any YouTube video to audio or video format online. 3 free credits per month.",
+            "h1": "YouTube Converter",
+            "subtitle": "Convert YouTube videos to MP3 or MP4 in one click. Fast, free and easy.",
+            "badge": "MP3/MP4 · Free · Online",
+            "placeholder": "Paste a YouTube link to convert...",
+            "cta": "Convert",
+            "tool_format": "mp4",
+            "show_cut_options": False,
+            "h2": "All-in-one YouTube converter",
+            "lead": "Yestubers is the best YouTube converter: choose MP3 for audio or MP4 for video, then download your file in seconds.",
+            "features": [
+                {
+                    "title": "MP3 + MP4",
+                    "text": "Convert to audio or video format in the same tool.",
+                },
+                {
+                    "title": "No install",
+                    "text": "Everything works in your browser.",
+                },
+                {
+                    "title": "High quality",
+                    "text": "MP3 192 kbps and MP4 up to 4K.",
+                },
+                {
+                    "title": "Free credits",
+                    "text": "3 conversions per month with a free account.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube URL.",
+                "Paste it and select MP3 or MP4.",
+                "Click Convert and download.",
+            ],
+            "why": "Yestubers replaces multiple tools: one converter for all formats, all qualities and all devices.",
+            "faqs": [
+                {
+                    "question": "What is a YouTube converter?",
+                    "answer": "A tool that transforms a YouTube video into a downloadable file like MP3 or MP4.",
+                },
+                {
+                    "question": "Is it free?",
+                    "answer": "Yes, you can convert 2 videos without an account and get 3 free credits per month after signup.",
+                },
+                {
+                    "question": "Which formats are supported?",
+                    "answer": "MP3, MP4, M4A and WAV.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+                {
+                    "url": "/youtube-downloader",
+                    "label": "YouTube Downloader",
+                },
+            ],
+        },
+    "convert-youtube-to-mp3": {
+            "template": "lp_base.html",
+            "slug": "convert-youtube-to-mp3",
+            "canonical_path": "/convert-youtube-to-mp3",
+            "title": "Convert YouTube to MP3 — Free Audio Download | Yestubers",
+            "description": "Convert any YouTube video to MP3 for free. Extract audio in 192 kbps quality. No software, no ads. 3 free credits per month.",
+            "h1": "Convert YouTube to MP3",
+            "subtitle": "Turn any YouTube video into a high-quality MP3 audio file in seconds.",
+            "badge": "MP3 · Free · 192 kbps",
+            "placeholder": "Paste a YouTube link...",
+            "cta": "Convert to MP3",
+            "tool_format": "mp3",
+            "show_cut_options": False,
+            "h2": "Convert YouTube to MP3 online",
+            "lead": "Yestubers extracts the audio from any YouTube video and saves it as a clean MP3. Ideal for music, podcasts and courses.",
+            "features": [
+                {
+                    "title": "MP3 192 kbps",
+                    "text": "Clear stereo audio compatible with all players.",
+                },
+                {
+                    "title": "Fast extraction",
+                    "text": "Convert online in seconds without installing anything.",
+                },
+                {
+                    "title": "No ads",
+                    "text": "Clean interface: paste, click, download.",
+                },
+                {
+                    "title": "Free credits",
+                    "text": "Get 3 free MP3 conversions per month.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube video URL.",
+                "Paste it in the converter field.",
+                "Click Convert to MP3 and download.",
+            ],
+            "why": "Yestubers gives a fast, safe and ad-free way to convert YouTube videos to MP3 audio files.",
+            "faqs": [
+                {
+                    "question": "Can I convert YouTube to MP3 for free?",
+                    "answer": "Yes, 2 conversions without signup and 3 free credits per month with an account.",
+                },
+                {
+                    "question": "What MP3 quality do I get?",
+                    "answer": "All MP3 files are extracted in 192 kbps stereo quality.",
+                },
+                {
+                    "question": "Is converting YouTube to MP3 legal?",
+                    "answer": "You must own the rights to the content or use copyright-free material.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+                {
+                    "url": "/convert-youtube-mp3",
+                    "label": "Convert YouTube MP3",
+                },
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+            ],
+        },
+    "youtube-mp3-downloader": {
+            "template": "lp_base.html",
+            "slug": "youtube-mp3-downloader",
+            "canonical_path": "/youtube-mp3-downloader",
+            "title": "YouTube MP3 Downloader — Free Audio | Yestubers",
+            "description": "Download YouTube videos as MP3 audio files. Free YouTube MP3 downloader with 192 kbps quality. 3 credits per month.",
+            "h1": "YouTube MP3 Downloader",
+            "subtitle": "Save YouTube audio as MP3. Fast, free and compatible with all devices.",
+            "badge": "MP3 · 192 kbps · Free",
+            "placeholder": "Paste a YouTube link...",
+            "cta": "Download MP3",
+            "tool_format": "mp3",
+            "show_cut_options": False,
+            "h2": "Free YouTube MP3 downloader",
+            "lead": "Yestubers is a fast YouTube MP3 downloader. Paste any link, get the audio track in MP3 format in seconds.",
+            "features": [
+                {
+                    "title": "MP3 audio",
+                    "text": "High-quality stereo audio for phones, PCs and players.",
+                },
+                {
+                    "title": "Fast",
+                    "text": "Download audio in seconds.",
+                },
+                {
+                    "title": "No account needed",
+                    "text": "Try 2 downloads before signing up.",
+                },
+                {
+                    "title": "3 free credits",
+                    "text": "Monthly free quota with a registered account.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube URL.",
+                "Paste it in the MP3 downloader.",
+                "Click Download MP3.",
+            ],
+            "why": "Yestubers offers a clean YouTube MP3 downloader without pop-ups or hidden redirects.",
+            "faqs": [
+                {
+                    "question": "Is the YouTube MP3 downloader free?",
+                    "answer": "Yes, you can download 2 MP3 files without an account and 3 per month for free after signup.",
+                },
+                {
+                    "question": "What quality?",
+                    "answer": "MP3 files are saved at 192 kbps stereo.",
+                },
+                {
+                    "question": "Does it work on mobile?",
+                    "answer": "Yes, the downloader works on any phone or tablet browser.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+                {
+                    "url": "/convert-youtube-to-mp3",
+                    "label": "Convert YouTube to MP3",
+                },
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+            ],
+        },
+    "youtube-mp4-downloader": {
+            "template": "lp_base.html",
+            "slug": "youtube-mp4-downloader",
+            "canonical_path": "/youtube-mp4-downloader",
+            "title": "YouTube MP4 Downloader — HD Video Free | Yestubers",
+            "description": "Download YouTube videos as MP4 files in HD. Free YouTube MP4 downloader with 720p/1080p/4K options. 3 credits per month.",
+            "h1": "YouTube MP4 Downloader",
+            "subtitle": "Save YouTube videos as MP4 in high definition. No software required.",
+            "badge": "MP4 HD · Free · No watermark",
+            "placeholder": "Paste a YouTube link...",
+            "cta": "Download MP4",
+            "tool_format": "mp4",
+            "show_cut_options": False,
+            "h2": "Best YouTube MP4 downloader",
+            "lead": "Yestubers downloads YouTube videos as MP4 files. Choose HD quality and get a clean file without watermark.",
+            "features": [
+                {
+                    "title": "HD quality",
+                    "text": "720p, 1080p or 4K depending on your plan.",
+                },
+                {
+                    "title": "Universal MP4",
+                    "text": "Works on all devices and video players.",
+                },
+                {
+                    "title": "No watermark",
+                    "text": "Clean output file.",
+                },
+                {
+                    "title": "Free credits",
+                    "text": "3 free MP4 downloads per month.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube video URL.",
+                "Paste it and click Download MP4.",
+                "Choose your quality and save the file.",
+            ],
+            "why": "Yestubers is a reliable YouTube MP4 downloader with high-quality output and no intrusive ads.",
+            "faqs": [
+                {
+                    "question": "Can I download MP4 for free?",
+                    "answer": "Yes, 2 free tries without account and 3 credits per month with a free account.",
+                },
+                {
+                    "question": "Is HD available?",
+                    "answer": "Yes, HD and 4K are available depending on your plan.",
+                },
+                {
+                    "question": "Are Shorts supported?",
+                    "answer": "Yes, YouTube Shorts links work the same as regular videos.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+                {
+                    "url": "/youtube-video-downloader",
+                    "label": "YouTube Video Downloader",
+                },
+                {
+                    "url": "/youtube-downloader",
+                    "label": "YouTube Downloader",
+                },
+            ],
+        },
+    "youtube-shorts-downloader": {
+            "template": "lp_base.html",
+            "slug": "youtube-shorts-downloader",
+            "canonical_path": "/youtube-shorts-downloader",
+            "title": "YouTube Shorts Downloader — MP4 Free | Yestubers",
+            "description": "Download YouTube Shorts as MP4 for free. Save vertical videos without watermark. 3 free credits per month.",
+            "h1": "YouTube Shorts Downloader",
+            "subtitle": "Download any YouTube Short in MP4 format, ready to repost.",
+            "badge": "Shorts · Vertical · Free",
+            "placeholder": "Paste a YouTube Shorts link...",
+            "cta": "Download Short",
+            "tool_format": "mp4",
+            "show_cut_options": False,
+            "h2": "Download YouTube Shorts easily",
+            "lead": "Yestubers lets you download YouTube Shorts as clean MP4 files. Keep the vertical format for TikTok, Instagram Reels and more.",
+            "features": [
+                {
+                    "title": "Vertical format",
+                    "text": "Preserves the original 9:16 aspect ratio.",
+                },
+                {
+                    "title": "No watermark",
+                    "text": "Clean MP4 ready to republish.",
+                },
+                {
+                    "title": "Fast",
+                    "text": "Short downloads processed quickly.",
+                },
+                {
+                    "title": "Free credits",
+                    "text": "3 free Short downloads per month.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube Shorts URL.",
+                "Paste it in the downloader field.",
+                "Click Download Short and save the MP4.",
+            ],
+            "why": "Yestubers is the easiest way to download YouTube Shorts for cross-posting to other platforms.",
+            "faqs": [
+                {
+                    "question": "Can I download YouTube Shorts for free?",
+                    "answer": "Yes, 2 Short downloads without account and 3 free credits per month after signup.",
+                },
+                {
+                    "question": "Does it keep vertical format?",
+                    "answer": "Yes, the original 9:16 format is preserved.",
+                },
+                {
+                    "question": "Is there a watermark?",
+                    "answer": "No, downloaded Shorts have no watermark.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+                {
+                    "url": "/youtube-video-downloader",
+                    "label": "YouTube Video Downloader",
+                },
+                {
+                    "url": "/youtube-downloader",
+                    "label": "YouTube Downloader",
+                },
+            ],
+        },
+    "youtube-playlist-downloader": {
+            "template": "lp_base.html",
+            "slug": "youtube-playlist-downloader",
+            "canonical_path": "/youtube-playlist-downloader",
+            "title": "YouTube Playlist Downloader — MP3/MP4 Bulk | Yestubers",
+            "description": "Download full YouTube playlists as MP3 or MP4. Bulk YouTube playlist downloader for music, podcasts and courses. Premium plans available.",
+            "h1": "YouTube Playlist Downloader",
+            "subtitle": "Save all videos from a YouTube playlist in one go. MP3 or MP4 output.",
+            "badge": "Playlist · Bulk · MP3/MP4",
+            "placeholder": "Paste a YouTube playlist link...",
+            "cta": "Download Playlist",
+            "tool_format": "mp4",
+            "show_cut_options": False,
+            "h2": "Bulk YouTube playlist downloader",
+            "lead": "Yestubers detects YouTube playlists and lets you download all videos as MP3 or MP4. Great for music collections, podcasts and archives.",
+            "features": [
+                {
+                    "title": "Auto-detection",
+                    "text": "Playlist links recognized automatically.",
+                },
+                {
+                    "title": "MP3 or MP4",
+                    "text": "Choose audio or video output for all items.",
+                },
+                {
+                    "title": "Bulk download",
+                    "text": "Download entire playlists without manual clicks.",
+                },
+                {
+                    "title": "Premium plans",
+                    "text": "Unlock full playlist downloads with paid plans.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube playlist URL.",
+                "Paste it and choose MP3 or MP4.",
+                "Click Download Playlist and get your files.",
+            ],
+            "why": "Yestubers is the best bulk YouTube playlist downloader for saving complete collections.",
+            "faqs": [
+                {
+                    "question": "Can I download playlists for free?",
+                    "answer": "Free accounts can preview playlists. Full bulk downloads are available on premium plans.",
+                },
+                {
+                    "question": "What formats?",
+                    "answer": "MP3, MP4, M4A and WAV.",
+                },
+                {
+                    "question": "Is there a limit?",
+                    "answer": "Playlist limits depend on your plan; Pro plans are unlimited.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+                {
+                    "url": "/youtube-downloader",
+                    "label": "YouTube Downloader",
+                },
+            ],
+        },
+    "youtube-audio-downloader": {
+            "template": "lp_base.html",
+            "slug": "youtube-audio-downloader",
+            "canonical_path": "/youtube-audio-downloader",
+            "title": "YouTube Audio Downloader — MP3/M4A/WAV Free | Yestubers",
+            "description": "Download YouTube audio as MP3, M4A or WAV. Free YouTube audio downloader with high quality. 3 credits per month.",
+            "h1": "YouTube Audio Downloader",
+            "subtitle": "Extract audio tracks from any YouTube video in MP3, M4A or WAV.",
+            "badge": "MP3/M4A/WAV · Free · High quality",
+            "placeholder": "Paste a YouTube link...",
+            "cta": "Download Audio",
+            "tool_format": "mp3",
+            "show_cut_options": False,
+            "h2": "Free YouTube audio downloader",
+            "lead": "Yestubers extracts audio from YouTube videos and saves it as MP3, M4A or WAV. Perfect for offline listening and podcasts.",
+            "features": [
+                {
+                    "title": "Multiple formats",
+                    "text": "MP3, M4A and WAV outputs available.",
+                },
+                {
+                    "title": "High quality",
+                    "text": "Clear stereo audio at 192 kbps MP3.",
+                },
+                {
+                    "title": "No install",
+                    "text": "Works directly in your browser.",
+                },
+                {
+                    "title": "Free credits",
+                    "text": "3 free audio downloads per month.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube URL.",
+                "Paste it and select audio format.",
+                "Click Download Audio.",
+            ],
+            "why": "Yestubers is a clean YouTube audio downloader for extracting sound from any video.",
+            "faqs": [
+                {
+                    "question": "Can I download audio for free?",
+                    "answer": "Yes, 2 free tries and 3 credits per month with a free account.",
+                },
+                {
+                    "question": "Which audio formats?",
+                    "answer": "MP3, M4A and WAV.",
+                },
+                {
+                    "question": "What quality?",
+                    "answer": "MP3 is extracted at 192 kbps stereo.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+                {
+                    "url": "/youtube-mp3-downloader",
+                    "label": "YouTube MP3 Downloader",
+                },
+                {
+                    "url": "/youtube-music-downloader",
+                    "label": "YouTube Music Downloader",
+                },
+            ],
+        },
+    "youtube-music-downloader": {
+            "template": "lp_base.html",
+            "slug": "youtube-music-downloader",
+            "canonical_path": "/youtube-music-downloader",
+            "title": "YouTube Music Downloader — MP3 Free | Yestubers",
+            "description": "Download music from YouTube as MP3. Free YouTube music downloader for songs, albums and playlists. 3 credits per month.",
+            "h1": "YouTube Music Downloader",
+            "subtitle": "Save your favorite YouTube music as high-quality MP3 files.",
+            "badge": "Music · MP3 · Free",
+            "placeholder": "Paste a YouTube music link...",
+            "cta": "Download Music",
+            "tool_format": "mp3",
+            "show_cut_options": False,
+            "h2": "Free YouTube music downloader",
+            "lead": "Yestubers turns YouTube music videos into MP3 files. Save songs, covers and albums for offline listening.",
+            "features": [
+                {
+                    "title": "MP3 music",
+                    "text": "High-quality audio for your music library.",
+                },
+                {
+                    "title": "Fast",
+                    "text": "Download songs in seconds.",
+                },
+                {
+                    "title": "No account",
+                    "text": "Try 2 downloads before signing up.",
+                },
+                {
+                    "title": "Free credits",
+                    "text": "3 free music downloads per month.",
+                },
+            ],
+            "steps": [
+                "Copy the YouTube music video URL.",
+                "Paste it in the downloader.",
+                "Click Download Music and save.",
+            ],
+            "why": "Yestubers is a simple YouTube music downloader without ads or redirects.",
+            "faqs": [
+                {
+                    "question": "Can I download YouTube music for free?",
+                    "answer": "Yes, 2 free tries and 3 credits per month with a free account.",
+                },
+                {
+                    "question": "What format?",
+                    "answer": "MP3, M4A and WAV.",
+                },
+                {
+                    "question": "Is it legal?",
+                    "answer": "Only download music you own or that is copyright-free.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+                {
+                    "url": "/youtube-audio-downloader",
+                    "label": "YouTube Audio Downloader",
+                },
+                {
+                    "url": "/youtube-mp3-downloader",
+                    "label": "YouTube MP3 Downloader",
+                },
+            ],
+        },
+    "telecharger-musique-youtube": {
+            "template": "lp_base.html",
+            "slug": "telecharger-musique-youtube",
+            "canonical_path": "/telecharger-musique-youtube",
+            "title": "Télécharger musique YouTube — MP3 Gratuit | Yestubers",
+            "description": "Téléchargez la musique YouTube en MP3 gratuitement. Convertisseur audio rapide, 3 crédits offerts par mois.",
+            "h1": "Télécharger musique YouTube",
+            "subtitle": "Sauvegardez vos morceaux YouTube en MP3 haute qualité.",
+            "badge": "Musique · MP3 · Gratuit",
+            "placeholder": "Collez un lien musique YouTube...",
+            "cta": "Télécharger la musique",
+            "tool_format": "mp3",
+            "show_cut_options": False,
+            "h2": "Télécharger musique YouTube en MP3",
+            "lead": "Yestubers transforme les vidéos musicales YouTube en fichiers MP3. Idéal pour écouter hors ligne.",
+            "features": [
+                {
+                    "title": "MP3 192 kbps",
+                    "text": "Qualité audio adaptée à la musique.",
+                },
+                {
+                    "title": "Rapide",
+                    "text": "Conversion en quelques secondes.",
+                },
+                {
+                    "title": "Sans compte",
+                    "text": "2 essais gratuits sans inscription.",
+                },
+                {
+                    "title": "3 crédits gratuits",
+                    "text": "Par mois avec un compte gratuit.",
+                },
+            ],
+            "steps": [
+                "Copiez le lien de la vidéo musique YouTube.",
+                "Collez-le dans le champ.",
+                "Cliquez sur Télécharger la musique.",
+            ],
+            "why": "Yestubers est le moyen le plus simple de télécharger la musique YouTube en MP3.",
+            "faqs": [
+                {
+                    "question": "Puis-je télécharger la musique YouTube gratuitement ?",
+                    "answer": "Oui, 2 essais sans compte et 3 crédits gratuits par mois.",
+                },
+                {
+                    "question": "Quel format audio ?",
+                    "answer": "MP3, M4A et WAV.",
+                },
+                {
+                    "question": "Est-ce légal ?",
+                    "answer": "Téléchargez uniquement la musique dont vous possédez les droits ou libre de droits.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/convertisseur-youtube-mp3",
+                    "label": "Convertisseur YouTube MP3",
+                },
+                {
+                    "url": "/telecharger-mp3-youtube",
+                    "label": "Télécharger MP3 YouTube",
+                },
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+            ],
+        },
+    "convertisseur-youtube-mp4": {
+            "template": "lp_base.html",
+            "slug": "convertisseur-youtube-mp4",
+            "canonical_path": "/convertisseur-youtube-mp4",
+            "title": "Convertisseur YouTube MP4 — Téléchargement HD Gratuit | Yestubers",
+            "description": "Convertissez des vidéos YouTube en MP4 HD. Convertisseur YouTube MP4 gratuit et rapide. 3 crédits offerts par mois.",
+            "h1": "Convertisseur YouTube MP4",
+            "subtitle": "Transformez n'importe quelle vidéo YouTube en fichier MP4 haute définition.",
+            "badge": "MP4 HD · Gratuit · Sans logiciel",
+            "placeholder": "Collez un lien YouTube ici...",
+            "cta": "Convertir en MP4",
+            "tool_format": "mp4",
+            "show_cut_options": False,
+            "h2": "Le convertisseur YouTube MP4 en français",
+            "lead": "Yestubers est le convertisseur YouTube MP4 le plus simple. Collez le lien, choisissez la qualité et téléchargez votre MP4.",
+            "features": [
+                {
+                    "title": "MP4 HD",
+                    "text": "Qualité 720p, 1080p ou 4K selon votre plan.",
+                },
+                {
+                    "title": "Sans logiciel",
+                    "text": "Tout se passe dans le navigateur.",
+                },
+                {
+                    "title": "Sans publicité",
+                    "text": "Interface propre et rapide.",
+                },
+                {
+                    "title": "3 crédits gratuits",
+                    "text": "Par mois avec un compte gratuit.",
+                },
+            ],
+            "steps": [
+                "Copiez le lien de la vidéo YouTube.",
+                "Collez-le dans le convertisseur.",
+                "Cliquez sur Convertir en MP4 et téléchargez.",
+            ],
+            "why": "Yestubers est le convertisseur YouTube MP4 français le plus rapide, optimisé mobile et desktop.",
+            "faqs": [
+                {
+                    "question": "Le convertisseur YouTube MP4 est-il gratuit ?",
+                    "answer": "Oui, 2 essais sans compte et 3 crédits gratuits par mois.",
+                },
+                {
+                    "question": "Puis-je convertir en HD ?",
+                    "answer": "Oui, jusqu'à 4K selon votre plan.",
+                },
+                {
+                    "question": "Quels formats ?",
+                    "answer": "MP4 pour la vidéo, MP3/M4A/WAV pour l'audio.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/youtube-to-mp4",
+                    "label": "YouTube to MP4",
+                },
+                {
+                    "url": "/telecharger-video-youtube",
+                    "label": "Télécharger vidéo YouTube",
+                },
+                {
+                    "url": "/youtube-downloader",
+                    "label": "YouTube Downloader",
+                },
+            ],
+        },
+    "telecharger-mp3-youtube": {
+            "template": "lp_base.html",
+            "slug": "telecharger-mp3-youtube",
+            "canonical_path": "/telecharger-mp3-youtube",
+            "title": "Télécharger MP3 YouTube — Gratuit | Yestubers",
+            "description": "Téléchargez des vidéos YouTube en MP3 gratuitement. MP3 192 kbps, sans logiciel, 3 crédits offerts par mois.",
+            "h1": "Télécharger MP3 YouTube",
+            "subtitle": "Obtenez l'audio de n'importe quelle vidéo YouTube en MP3 en quelques secondes.",
+            "badge": "MP3 · Gratuit · Sans logiciel",
+            "placeholder": "Collez un lien YouTube ici...",
+            "cta": "Télécharger MP3",
+            "tool_format": "mp3",
+            "show_cut_options": False,
+            "h2": "Télécharger MP3 YouTube gratuit",
+            "lead": "Yestubers est le moyen le plus rapide de télécharger l'audio YouTube en MP3. Collez le lien, cliquez, téléchargez.",
+            "features": [
+                {
+                    "title": "MP3 192 kbps",
+                    "text": "Qualité audio optimale pour tous les appareils.",
+                },
+                {
+                    "title": "Sans installation",
+                    "text": "Tout se fait en ligne.",
+                },
+                {
+                    "title": "Sans publicité",
+                    "text": "Interface épurée.",
+                },
+                {
+                    "title": "3 crédits gratuits",
+                    "text": "Par mois avec inscription gratuite.",
+                },
+            ],
+            "steps": [
+                "Copiez l'URL de la vidéo YouTube.",
+                "Collez-la dans le champ de téléchargement.",
+                "Cliquez sur Télécharger MP3.",
+            ],
+            "why": "Yestubers est le téléchargeur MP3 YouTube le plus simple : rapide, propre et sécurisé.",
+            "faqs": [
+                {
+                    "question": "Puis-je télécharger MP3 YouTube gratuitement ?",
+                    "answer": "Oui, 2 essais sans compte et 3 crédits gratuits par mois.",
+                },
+                {
+                    "question": "Quelle qualité MP3 ?",
+                    "answer": "192 kbps stéréo, compatible tous lecteurs.",
+                },
+                {
+                    "question": "Est-ce légal ?",
+                    "answer": "Téléchargez uniquement le contenu dont vous possédez les droits ou libre de droits.",
+                },
+            ],
+            "related_links": [
+                {
+                    "url": "/convertisseur-youtube-mp3",
+                    "label": "Convertisseur YouTube MP3",
+                },
+                {
+                    "url": "/telecharger-musique-youtube",
+                    "label": "Télécharger musique YouTube",
+                },
+                {
+                    "url": "/youtube-to-mp3",
+                    "label": "YouTube to MP3",
+                },
+            ],
+        },
 }
+
 
 for _lp_slug, _lp_data in LP_PAGES.items():
     _lp_template = _lp_data["template"]
