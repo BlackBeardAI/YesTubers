@@ -2886,8 +2886,29 @@ async def api_download(
         except:
             video.title = f"Video {vid_db[:8]}"
 
+        # Convert to audio if requested
+        fmt = (format or "mp4").lower()
+        if fmt in ("mp3", "m4a", "wav"):
+            src = VIDEOS / video.filename
+            ext = "mp3" if fmt == "mp3" else ("m4a" if fmt == "m4a" else "wav")
+            audio_path = VIDEOS / f"{vid_db}.{ext}"
+            audio_codec = "libmp3lame" if fmt == "mp3" else ("aac" if fmt == "m4a" else "pcm_s16le")
+            conv = await asyncio.create_subprocess_exec(
+                "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(src),
+                "-vn", "-c:a", audio_codec, "-b:a", "192k", str(audio_path),
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            _, err = await conv.communicate()
+            if conv.returncode != 0:
+                raise Exception(f"Erreur conversion audio: {err.decode()[:200]}")
+            src.unlink(missing_ok=True)
+            video.filename = audio_path.name
+            video.filesize = audio_path.stat().st_size
+
         db.commit()
-        return {"ok": True, "video_id": vid_db, "title": video.title, "duration": video.duration}
+        return {"ok": True, "video_id": vid_db, "title": video.title, "duration": video.duration,
+                "filesize": video.filesize, "download_url": f"/api/videos/{vid_db}/download",
+                "remaining_credits": user.credits}
 
     except Exception as e:
         video.status = "error"
@@ -2921,7 +2942,7 @@ async def api_video_download_file(
     path = VIDEOS / video.filename
     if not path.exists():
         raise HTTPException(404, "Fichier introuvable")
-    return FileResponse(str(path), filename=f"{video.title or 'video'}.mp4")
+    return FileResponse(str(path), filename=f"{video.title or 'video'}.{path.suffix.lstrip('.')}")
 
 @app.delete("/api/videos/{video_id}")
 async def api_video_delete(

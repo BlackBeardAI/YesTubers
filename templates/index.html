@@ -402,6 +402,8 @@
         }, 500);
     }
 
+    const isAuthenticated = {{ "true" if user else "false" }};
+
     async function startPublicDownload() {
         const url = document.getElementById('video-url').value.trim();
         const format = document.getElementById('format-select').value;
@@ -432,7 +434,10 @@
             form.append('url', url);
             form.append('format', format);
             if (playlist) form.append('playlist', 'true');
-            const r = await fetch('/api/download', { method: 'POST', body: form });
+
+            // Authenticated users get plan limits and credits; anonymous users get public quota.
+            const endpoint = isAuthenticated ? '/api/videos/download' : '/api/download';
+            const r = await fetch(endpoint, { method: 'POST', body: form });
             const data = await r.json().catch(() => ({}));
 
             if (!r.ok) {
@@ -440,7 +445,7 @@
                 throw new Error(data.detail || 'Erreur de téléchargement');
             }
 
-            const remaining = data.remaining_anonymous;
+            const remaining = isAuthenticated ? data.remaining_credits : data.remaining_anonymous;
 
             // Fetch file as blob
             const fileR = await fetch(data.download_url);
@@ -467,7 +472,7 @@
             a.remove();
             URL.revokeObjectURL(a.href);
 
-            showStatus(`✅ Téléchargement terminé ! Il vous reste ${remaining} téléchargement(s) gratuit(s).`, 'success');
+            showStatus(`✅ Téléchargement terminé ! ${isAuthenticated ? 'Crédits restants : ' + remaining : 'Il vous reste ' + remaining + ' téléchargement(s) gratuit(s).'}`, 'success');
         } catch (err) {
             clearInterval(interval);
             showStatus('❌ ' + err.message, 'error');
