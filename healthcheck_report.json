@@ -1,0 +1,171 @@
+{
+  "timestamp": "2026-07-08T06:45Z",
+  "domain": "yestubers.cloud",
+  "summary": {
+    "ok": 31,
+    "warn": 0,
+    "fail": 0
+  },
+  "checks": [
+    {
+      "status": "ok",
+      "name": "SSL certificate",
+      "detail": "Let's Encrypt OK"
+    },
+    {
+      "status": "ok",
+      "name": "HTTP→HTTPS redirect",
+      "detail": "301"
+    },
+    {
+      "status": "ok",
+      "name": "HEAD /",
+      "detail": "200"
+    },
+    {
+      "status": "ok",
+      "name": "GET /",
+      "detail": "~0.05s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /fr",
+      "detail": "~0.05s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /en",
+      "detail": "~0.05s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /pricing",
+      "detail": "~0.06s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /about",
+      "detail": "~0.05s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /contact",
+      "detail": "~0.05s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /terms",
+      "detail": "~0.04s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /privacy",
+      "detail": "~0.04s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /dmca",
+      "detail": "~0.05s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /login",
+      "detail": "~0.04s"
+    },
+    {
+      "status": "ok",
+      "name": "GET /signup",
+      "detail": "~0.04s"
+    },
+    {
+      "status": "ok",
+      "name": "/sitemap.xml",
+      "detail": "200"
+    },
+    {
+      "status": "ok",
+      "name": "/robots.txt",
+      "detail": "200"
+    },
+    {
+      "status": "ok",
+      "name": "/.well-known/security.txt",
+      "detail": "200"
+    },
+    {
+      "status": "ok",
+      "name": "/health",
+      "detail": "users=12, version=10"
+    },
+    {
+      "status": "ok",
+      "name": "Auth signup",
+      "detail": "OK"
+    },
+    {
+      "status": "ok",
+      "name": "Auth login",
+      "detail": "session OK"
+    },
+    {
+      "status": "ok",
+      "name": "Dashboard",
+      "detail": "session OK"
+    },
+    {
+      "status": "ok",
+      "name": "Settings",
+      "detail": "accessible"
+    },
+    {
+      "status": "ok",
+      "name": "API MP3 download (auth)",
+      "detail": "~5s, 445Ko, valid MPEG audio"
+    },
+    {
+      "status": "ok",
+      "name": "API MP4 download (auth)",
+      "detail": "~5s, 614Ko, valid MP4"
+    },
+    {
+      "status": "ok",
+      "name": "API download anonyme",
+      "detail": "OK (quota 2/jour/IP)"
+    },
+    {
+      "status": "ok",
+      "name": "Stripe checkout",
+      "detail": "redirection Stripe générée"
+    },
+    {
+      "status": "ok",
+      "name": "Logout",
+      "detail": "OK"
+    },
+    {
+      "status": "ok",
+      "name": "Header HSTS",
+      "detail": "présent"
+    },
+    {
+      "status": "ok",
+      "name": "Header X-Content-Type-Options",
+      "detail": "présent"
+    },
+    {
+      "status": "ok",
+      "name": "Header X-Frame-Options",
+      "detail": "présent"
+    },
+    {
+      "status": "ok",
+      "name": "Header Referrer-Policy",
+      "detail": "présent"
+    },
+    {
+      "status": "ok",
+      "name": "systemd services",
+      "detail": "yestubers + nginx active"
+    }
+  ]
+}
