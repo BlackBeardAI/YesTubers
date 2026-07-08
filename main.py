@@ -2256,7 +2256,7 @@ def send_verification_email(user: User, token: str) -> bool:
     verify_url = f"https://yestubers.cloud/verify-email?token={token}"
     body = f"""<p>Bonjour,</p>
 <p>Merci de rejoindre Yestubers. Confirmez votre adresse email en cliquant sur le lien ci-dessous :</p>
-<p><a href="{verify_url}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#ff2d55,#ffa94d);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Vérifier mon email</a></p>
+<p><a href="{verify_url}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Vérifier mon email</a></p>
 <p>Ou copiez ce lien : {verify_url}</p>
 <p>Ce lien expire dans 24 heures.</p>
 <p>Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.</p>
