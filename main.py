@@ -121,7 +121,7 @@ if not STRIPE_SK:
     except Exception:
         pass
 
-STRIPE_ENABLED = bool(STRIPE_SK and not STRIPE_SK.startswith("sk_") and len(STRIPE_SK) > 12)
+STRIPE_ENABLED = bool(STRIPE_SK and STRIPE_SK.startswith("sk_") and len(STRIPE_SK) > 12)
 print(f"Stripe enabled: {STRIPE_ENABLED}")
 
 # Stripe python client is only loaded if enabled
@@ -161,36 +161,45 @@ def _resolve_stripe_price(pid: str) -> tuple[float, str]:
 _PLAN_DEFAULTS = {
     "free": {
         "name": "Gratuit",
-        "description": "3 vidéos gratuites chaque mois.",
-        "credits": 3, "max_duration": 30, "quality": "480",
-        "quality_options": ["480"],
-        "features": ["3 téléchargements/mois", "Qualité 480p", "Sans engagement", "Publicités"],
+        "description": "1 aperçu gratuit par semaine. Idéal pour tester.",
+        "credits": 1, "max_duration": 30, "quality": "360",
+        "quality_options": ["360"],
+        "features": ["1 aperçu/semaine", "Qualité 360p", "Watermark", "Sans engagement"],
         "popular": False,
+        "tripwire": True,
     },
     "starter": {
         "name": "Starter",
-        "description": "30 vidéos HD par mois. Parfait pour débuter.",
-        "credits": 30, "max_duration": 300, "quality": "720",
-        "quality_options": ["480", "720"],
-        "features": ["30 téléchargements/mois", "Qualité HD 720p", "Sans publicité", "Support email"],
+        "description": "Débloquez HD, MP3 et 25 crédits. Offre d'appel 1€ le premier mois.",
+        "credits": 25, "max_duration": 300, "quality": "720",
+        "quality_options": ["360", "720"],
+        "features": ["25 crédits/mois", "MP3 & MP4 HD 720p", "Sans publicité", "Support email"],
         "popular": False,
+        "tripwire": True,
     },
     "creator": {
         "name": "Creator",
-        "description": "200 vidéos Full HD par mois. Le choix des créateurs.",
-        "credits": 200, "max_duration": 1200, "quality": "1080",
-        "quality_options": ["480", "720", "1080"],
-        "features": ["200 téléchargements/mois", "Full HD 1080p", "Découpe intégrée", "Support prioritaire"],
+        "description": "Le sweet spot pour les créateurs réguliers.",
+        "credits": 100, "max_duration": 1200, "quality": "1080",
+        "quality_options": ["360", "720", "1080"],
+        "features": ["100 crédits/mois", "Full HD 1080p", "Découpe intégrée", "Support prioritaire"],
         "popular": True,
     },
     "pro": {
         "name": "Pro",
-        "description": "Téléchargements illimités en 4K pour pros et agences.",
+        "description": "Usage illimité en 4K pour pros et agences.",
         "credits": 999999, "max_duration": 3600, "quality": "4K",
-        "quality_options": ["480", "720", "1080", "4K"],
-        "features": ["Téléchargements illimités", "Qualité 4K", "Découpe avancée", "Support prioritaire", "Accès API"],
+        "quality_options": ["360", "720", "1080", "4K"],
+        "features": ["Crédits illimités", "Qualité 4K", "Découpe avancée", "Support prioritaire", "Accès API"],
         "popular": False,
     },
+}
+
+
+_DEFAULT_MONTHLY_PRICES = {
+    "starter": 2.99,
+    "creator": 5.99,
+    "pro": 11.99,
 }
 
 
@@ -208,6 +217,11 @@ def _build_plans() -> dict:
         monthly_pid, annual_pid = _STRIPE_PRICE_IDS[key]
         monthly_amount, monthly_interval = _resolve_stripe_price(monthly_pid) if monthly_pid else (0.0, "month")
         annual_amount, annual_interval = _resolve_stripe_price(annual_pid) if annual_pid else (0.0, "year")
+        # Fall back to default prices if Stripe IDs are not configured.
+        if monthly_amount == 0.0:
+            monthly_amount = _DEFAULT_MONTHLY_PRICES.get(key, 0.0)
+        if annual_amount == 0.0:
+            annual_amount = round(monthly_amount * 12 * 0.67, 2)  # 33% annual discount
         # If interval is year, amount is the full annual price. Convert to monthly equivalent for display.
         displayed_monthly = monthly_amount
         displayed_annual_monthly = (annual_amount / 12.0) if annual_interval == "year" else annual_amount
@@ -2152,6 +2166,7 @@ _jinja_env = Environment(
     cache_size=0,
 )
 _jinja_env.filters["from_json"] = json.loads
+_jinja_env.filters["fr_eur"] = lambda n: f"{n:.2f}".replace(".", ",")
 _jinja_env.globals["plans"] = PLANS
 _jinja_env.globals["datetime"] = datetime
 
@@ -4603,11 +4618,52 @@ async def api_cut_delete(
 
 # ─── Stripe ───────────────────────────────────────────────────────────────────
 
+# Tripwire promo: coupon applied for 1€ first month on Starter monthly subscription.
+# The coupon is created/retrieved lazily and cached.
+_starter_trial_coupon_id: str | None = None
+
+async def _get_starter_trial_coupon_id() -> str | None:
+    global _starter_trial_coupon_id
+    if _starter_trial_coupon_id:
+        return _starter_trial_coupon_id
+    if not stripe:
+        return None
+    env_id = os.environ.get("STRIPE_STARTER_PROMO_COUPON_ID")
+    if env_id:
+        try:
+            await asyncio.to_thread(stripe.Coupon.retrieve, env_id)
+            _starter_trial_coupon_id = env_id
+            return env_id
+        except Exception as e:
+            print(f"[stripe coupon] env coupon {env_id} not usable: {e}")
+    try:
+        # Try to retrieve an existing coupon by name; if not present create one.
+        coupons = await asyncio.to_thread(stripe.Coupon.list, limit=10)
+        for c in coupons.auto_paging_iter():
+            if c.get("name") == "Starter 1€ premier mois":
+                _starter_trial_coupon_id = c.id
+                return c.id
+        coupon = await asyncio.to_thread(
+            stripe.Coupon.create,
+            id="STARTER_1E_FIRST_MONTH",
+            name="Starter 1€ premier mois",
+            amount_off=199,  # 2.99€ - 1.00€ = 1.99€
+            currency="eur",
+            duration="once",
+        )
+        _starter_trial_coupon_id = coupon.id
+        return coupon.id
+    except Exception as e:
+        print(f"[stripe coupon] could not create/retrieve: {e}")
+        return None
+
+
 @app.post("/api/stripe/create-checkout")
 async def stripe_checkout(
     request: Request,
     plan: str = Form(...),
     billing: str = Form("annual"),
+    promo: str = Form(""),  # "1e" triggers the Starter tripwire offer
     user: User = Depends(require_user),
     db: Session = Depends(get_db)
 ):
@@ -4626,6 +4682,7 @@ async def stripe_checkout(
 
     plan_data = PLANS[plan]
     price_field = "stripe_annual_price_id" if billing == "annual" else "stripe_price_id"
+    # For the tripwire, monthly Starter base price is 2.99€. Stripe product price uses that.
     amount = round(plan_data["monthly_price"] * 12, 2) if billing == "annual" else plan_data["monthly_price"]
 
     if not user.stripe_customer_id:
@@ -4659,19 +4716,28 @@ async def stripe_checkout(
             raise HTTPException(503, f"Stripe indisponible : {str(e)[:120]}")
         plan_data[price_field] = price.id
 
+    discounts = None
+    if plan == "starter" and billing == "monthly" and promo.lower() in ("1e", "1€", "1eur", "tripwire", "starter"):
+        coupon_id = await _get_starter_trial_coupon_id()
+        if coupon_id:
+            discounts = [{"coupon": coupon_id}]
+
     try:
         session_token = secrets.token_urlsafe(16)
-        session = await asyncio.to_thread(
-            stripe.checkout.Session.create,
+        kwargs = dict(
             customer=user.stripe_customer_id,
             payment_method_types=["card"],
             line_items=[{"price": plan_data[price_field], "quantity": 1}],
             mode="subscription",
             success_url=f"https://yestubers.cloud/dashboard?session={session_token}",
             cancel_url="https://yestubers.cloud/pricing",
-            metadata={"user_id": user.id, "plan": plan, "billing": billing, "token": session_token},
+            metadata={"user_id": user.id, "plan": plan, "billing": billing, "token": session_token, "promo": promo},
+            subscription_data={"metadata": {"plan": plan, "promo": promo}},
         )
-        return {"url": session.url}
+        if discounts:
+            kwargs["discounts"] = discounts
+        session = await asyncio.to_thread(stripe.checkout.Session.create, **kwargs)
+        return {"url": session.url, "promo_applied": bool(discounts)}
     except Exception as e:
         raise HTTPException(503, f"Stripe indisponible : {str(e)[:120]}")
 

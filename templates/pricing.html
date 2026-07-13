@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}{{ i18n.pricing_title }} | {{ i18n.brand }}{% endblock %}
@@ -6,72 +7,74 @@
 {% block og_description %}{{ i18n.pricing_desc }}{% endblock %}
 {% block twitter_title %}{{ i18n.pricing_title }} | {{ i18n.brand }}{% endblock %}
 {% block twitter_description %}{{ i18n.pricing_desc }}{% endblock %}
-{% block body_class %}{% endblock %}
+{% block body_class %}pricing{% endblock %}
 
 {% block content %}
 
-<div class="ambient-bg"></div>
-
-
-
-<section class="pricing-hero">
+<section class="hero" style="padding-bottom:40px">
     <div class="container">
-        <p class="pricing-eyebrow">🔒 Tarifs simples — pas de frais cachés</p>
-        <h1>{{ i18n.pricing_h1|safe }}</h1>
-        <p class="pricing-sub">{{ i18n.pricing_sub }}</p>
-
-        <div class="billing-switch" role="tablist" aria-label="Billing period">
-            <button class="billing-option active" id="btn-annual" onclick="switchBilling('annual')" role="tab" aria-selected="true">
-                Annuel
-                <span class="billing-save">-33%</span>
-            </button>
-            <button class="billing-option" id="btn-monthly" onclick="switchBilling('monthly')" role="tab" aria-selected="false">
-                Mensuel
-            </button>
+        <div class="hero-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            <span>Offre de lancement</span>
         </div>
+        <h1>Passez Premium dès <span class="gradient-text">1€ le premier mois</span></h1>
+        <p class="hero-subtitle">Commencez par le Starter : 25 crédits, MP3, HD 720p, sans pub. Ensuite seulement 2,99€/mois. Annulez quand vous voulez.</p>
     </div>
 </section>
 
-<section class="pricing-grid-section">
+<section class="pricing-section" style="padding-top:20px">
     <div class="container">
-        <div class="pricing-grid" id="pricing-grid">
+        <div class="pricing-toggle" role="tablist" aria-label="Billing period">
+            <button class="billing-option active" id="btn-monthly" onclick="switchBilling('monthly')" role="tab" aria-selected="true">Mensuel</button>
+            <button class="billing-option" id="btn-annual" onclick="switchBilling('annual')" role="tab" aria-selected="false">Annuel <span style="background:var(--primary);color:#fff;border-radius:999px;padding:2px 8px;font-size:.7rem;margin-left:6px">-33%</span></button>
+        </div>
+
+        <div class="pricing-grid">
             {% for key, plan in plans.items() %}
             <article class="pricing-card{% if plan.popular %} popular{% endif %}" data-plan="{{ key }}">
                 {% if plan.popular %}
                 <div class="popular-badge">Le plus populaire</div>
                 {% endif %}
-                <div class="plan-header">
-                    <h3>{{ plan.name }}</h3>
-                    <p class="plan-desc">{{ plan.description }}</p>
-                </div>
-                <div class="plan-price">
-                    {% if plan.monthly_price == 0 %}
-                    <span class="price-amount">Gratuit</span>
+                {% if key == 'starter' %}
+                <div class="popular-badge" style="background:var(--success)">Offre d'appel</div>
+                {% endif %}
+
+                <h3>{{ plan.name }}</h3>
+                <p class="plan-desc">{{ plan.description }}</p>
+
+                <div class="price" style="margin-top:8px">
+                    {% if key == 'starter' %}
+                        <span id="price-starter">1€</span>
+                        <span style="font-size:1rem;font-weight:500;color:var(--text-muted)"> le 1er mois, puis <span id="recurring-starter">2,99€</span>/mois</span>
+                    {% elif plan.monthly_price == 0 %}
+                        Gratuit
                     {% else %}
-                    <span class="price-prefix" id="prefix-{{ key }}"></span>
-                    <span class="price-amount" id="amount-{{ key }}" data-monthly="{{ '%.2f' % plan.monthly_price }}" data-annual="{{ '%.2f' % (plan.annual_monthly_price if plan.annual_monthly_price else plan.monthly_price) }}" data-annual-total="{{ '%.2f' % (plan.annual_monthly_price*12 if plan.annual_monthly_price else plan.monthly_price*12) }}">{{ '%.2f' % plan.monthly_price }}€</span>
-                    <span class="price-suffix" id="suffix-{{ key }}">/mois</span>
+                        <span id="price-{{ key }}" data-monthly="{{ '%.2f' % plan.monthly_price }}" data-annual="{{ '%.2f' % (plan.annual_monthly_price if plan.annual_monthly_price else plan.monthly_price) }}">{{ plan.monthly_price | fr_eur }}€</span>
+                        <span>/mois</span>
                     {% endif %}
                 </div>
-                {% if plan.monthly_price > 0 %}
-                <p class="price-original" id="original-line-{{ key }}">Au lieu de <span id="original-{{ key }}" data-monthly="{{ '%.2f' % plan.monthly_price }}" data-annual="{{ '%.2f' % (plan.monthly_price) }}">{{ '%.2f' % plan.monthly_price }}€</span></p>
+                {% if plan.monthly_price > 0 and key != 'starter' %}
+                <p class="price-detail" id="detail-{{ key }}">Facturé <span id="total-{{ key }}" data-monthly="{{ '%.2f' % plan.monthly_price }}" data-annual="{{ '%.2f' % (plan.annual_monthly_price*12 if plan.annual_monthly_price else plan.monthly_price*12) }}">{{ plan.monthly_price | fr_eur }}€</span>/<span id="interval-{{ key }}">mois</span></p>
+                {% elif key == 'starter' %}
+                <p class="price-detail">Sans engagement — annulez avant le renouvellement</p>
                 {% endif %}
-                {% if plan.monthly_price > 0 %}
-                <p class="price-detail" id="detail-{{ key }}" data-annual-total="{{ '%.2f' % (plan.annual_monthly_price*12 if plan.annual_monthly_price else plan.monthly_price*12) }}" data-monthly="{{ '%.2f' % plan.monthly_price }}">Facturé {{ '%.2f' % plan.monthly_price }}€/mois</p>
-                {% endif %}
+
                 <ul class="plan-features">
                     {% for feat in plan.features %}
                     <li>{{ feat }}</li>
                     {% endfor %}
                 </ul>
+
                 {% if user is defined and user and user.plan == key %}
-                <button class="btn-plan current" disabled>{{ i18n.current_plan_btn }}</button>
+                <button class="btn-plan primary" disabled>{{ i18n.current_plan_btn }}</button>
                 {% elif key == 'free' %}
-                <a href="{{ "/dashboard" if user else "/signup?next=/pricing" }}" id="free-plan-link" class="btn-plan secondary">{{ "Mon compte" if user else "Commencer gratuitement" }}</a>
-                {% elif not stripe_enabled %}
-                <button class="btn-plan primary checkout-btn" data-plan="{{ key }}">Activer {{ plan.name }}</button>
+                <a href="{{ "/dashboard" if user else "/signup?next=/pricing" }}" class="btn-plan secondary">{{ "Mon compte" if user else "Commencer gratuitement" }}</a>
                 {% else %}
-                <button class="btn-plan primary checkout-btn" data-plan="{{ key }}">Choisir {{ plan.name }}</button>
+                <button class="btn-plan primary checkout-btn" data-plan="{{ key }}" data-promo="{% if key=='starter' %}1e{% endif %}">
+                    {% if key == 'starter' %}Obtenir pour 1€{% else %}Choisir {{ plan.name }}{% endif %}
+                </button>
                 {% endif %}
             </article>
             {% endfor %}
@@ -79,270 +82,149 @@
     </div>
 </section>
 
-<section class="compare-section">
+<section class="section">
     <div class="container">
-        <h2>Comparez les formules</h2>
-        <div class="compare-table">
-            <div class="compare-header">
-                <div class="compare-cell feature-name">Fonctionnalité</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell plan-name{% if plan.popular %} popular{% endif %}">{{ plan.name }}</div>
-                {% endfor %}
-            </div>
-
-            {% set rows = [
-                ('Crédits mensuels', 'credits'),
-                ('Qualité max', 'quality'),
-                ('Durée max vidéo', 'max_duration'),
-                ('Sans publicité', 'no_ads'),
-                ('Découpe vidéo', 'cut'),
-                ('Support prioritaire', 'support'),
-                ('Accès API', 'api')
-            ] %}
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Prix/mois</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell" data-plan="{{ key }}">
-                    {% if plan.monthly_price == 0 %}Gratuit{% else %}{{ '%.2f' % plan.monthly_price }}€{% endif %}
-                </div>
-                {% endfor %}
-            </div>
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Crédits mensuels</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell">{% if plan.credits >= 999999 %}Illimités{% else %}{{ plan.credits }}{% endif %}</div>
-                {% endfor %}
-            </div>
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Qualité max</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell">{{ plan.quality }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Durée max</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell">{% if plan.max_duration >= 60 %}{{ plan.max_duration//60 }} min{% else %}{{ plan.max_duration }} s{% endif %}</div>
-                {% endfor %}
-            </div>
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Sans publicité</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell">{% if key == 'free' %}—{% else %}✓{% endif %}</div>
-                {% endfor %}
-            </div>
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Découpe vidéo</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell">{% if key in ('creator','pro') %}✓{% else %}—{% endif %}</div>
-                {% endfor %}
-            </div>
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Support prioritaire</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell">{% if key in ('creator','pro') %}✓{% else %}—{% endif %}</div>
-                {% endfor %}
-            </div>
-
-            <div class="compare-row">
-                <div class="compare-cell feature-name">Accès API</div>
-                {% for key, plan in plans.items() %}
-                <div class="compare-cell">{% if key == 'pro' %}✓{% else %}—{% endif %}</div>
-                {% endfor %}
-            </div>
+        <div class="section-header">
+            <h2>Comparez les formules</h2>
+            <p>Commencez petit, montez en puissance quand vous en avez besoin.</p>
+        </div>
+        <div class="compare-table" style="overflow:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:.92rem">
+                <thead>
+                    <tr style="border-bottom:2px solid var(--border)">
+                        <th style="text-align:left;padding:12px">Fonctionnalité</th>
+                        {% for key, plan in plans.items() %}
+                        <th style="padding:12px;text-align:center;{% if plan.popular %}color:var(--primary){% endif %}">{{ plan.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:12px">Prix mensuel</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center;font-weight:600">
+                            {% if key == 'starter' %}2,99€{% elif plan.monthly_price == 0 %}Gratuit{% else %}{{ plan.monthly_price | fr_eur }}€{% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:12px">Crédits/mois</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center">{% if plan.credits >= 999999 %}Illimités{% else %}{{ plan.credits }}{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:12px">Qualité max</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center">{{ plan.quality }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:12px">Durée max/vidéo</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center">{{ plan.max_duration//60 }} min{% if plan.max_duration >= 3600 %}+{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:12px">MP3</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center">{% if key == 'free' %}—{% else %}✓{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:12px">Découpe</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center">{% if key in ('creator','pro') %}✓{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:12px">Sans publicité</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center">{% if key == 'free' %}—{% else %}✓{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td style="padding:12px">Support prioritaire</td>
+                        {% for key, plan in plans.items() %}
+                        <td style="padding:12px;text-align:center">{% if key in ('creator','pro') %}✓{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            <table>
         </div>
     </div>
 </section>
 
-<section class="pricing-trust">
-    <div class="container trust-grid">
-        <div class="trust-card">
-            <div class="trust-icon">🔒</div>
-            <h4>Paiement sécurisé</h4>
-            <p>Stripe, SSL, conforme PCI-DSS. Vos données ne transitent jamais en clair.</p>
-        </div>
-        <div class="trust-card">
-            <div class="trust-icon">⚡</div>
-            <h4>Activation instantanée</h4>
-            <p>Vos crédits sont crédités dès la confirmation du paiement.</p>
-        </div>
-        <div class="trust-card">
-            <div class="trust-icon">↩️</div>
-            <h4>Satisfait ou remboursé</h4>
-            <p>7 jours pour tester. Annulation simple depuis votre dashboard.</p>
-        </div>
-    </div>
-</section>
-
-<section class="faq-section">
+<section class="cta-banner" style="margin:0">
     <div class="container">
-        <h2>{{ i18n.faq_title }}</h2>
-        <div class="faq-grid">
-            <div class="faq-card">
-                <h3>Puis-je changer de plan à tout moment ?</h3>
-                <p>Oui. Vous pouvez upgrader ou downgrader depuis votre dashboard. Le nouveau crédit s'applique immédiatement.</p>
-            </div>
-            <div class="faq-card">
-                <h3>Que se passe-t-il quand mes crédits sont épuisés ?</h3>
-                <p>Vous pouvez attendre le renouvellement mensuel ou upgrader pour obtenir plus de crédits.</p>
-            </div>
-            <div class="faq-card">
-                <h3>Les crédits non utilisés sont-ils reportés ?</h3>
-                <p>Non. Les crédits se réinitialisent chaque mois pour garder le service rapide pour tout le monde.</p>
-            </div>
-            <div class="faq-card">
-                <h3>Le plan annuel est-il vraiment avantageux ?</h3>
-                <p>Oui. Le forfait annuel affiche un prix mensuel équivalent avec 20 % d'économie sur l'année complète.</p>
-            </div>
-        </div>
+        <h2>Toujours hésitant ?</h2>
+        <p>Testez gratuitement avec 1 aperçu par semaine. Puis débloquez tout pour 1€.</p>
+        <a href="/signup" class="btn-secondary">Créer mon compte →</a>
     </div>
 </section>
 
-<section class="pricing-cta-bottom">
-    <div class="container">
-        <h2>Prêt à télécharger sans limites ?</h2>
-        <p>Rejoignez les créateurs qui utilisent Yestubers chaque jour.</p>
-        {% if user is defined and user %}
-        <a href="/dashboard" class="btn-lg btn-primary">Accéder à mon dashboard →</a>
-        {% else %}
-        <a href="/signup" class="btn-lg btn-primary">Créer mon compte gratuit →</a>
-        {% endif %}
-    </div>
-</section>
+{% endblock %}
 
-
-
-<div class="cookie-banner" id="cookie-banner">
-    <p>{{ i18n.cookie_text }} <a href="/privacy">{{ i18n.cookie_link }}</a></p>
-    <button class="btn-sm btn-primary" id="cookie-ok">OK</button>
-</div>
-
+{% block extra_js %}
 <script>
-    const isAuthenticated = {{ "true" if user else "false" }};
-    const stripePublishableKey = "{{ stripe_pk }}";
-    const stripeEnabled = {{ "true" if stripe_enabled else "false" }};
+const PLANS = {{ plans|tojson }};
+let currentBilling = 'monthly';
+function switchBilling(period){
+    currentBilling = period;
+    document.getElementById('btn-monthly').classList.toggle('active', period==='monthly');
+    document.getElementById('btn-monthly').setAttribute('aria-selected', period==='monthly');
+    document.getElementById('btn-annual').classList.toggle('active', period==='annual');
+    document.getElementById('btn-annual').setAttribute('aria-selected', period==='annual');
 
-    function switchBilling(billing) {
-        const isAnnual = billing === 'annual';
-        document.getElementById('btn-annual').classList.toggle('active', isAnnual);
-        document.getElementById('btn-annual').setAttribute('aria-selected', isAnnual);
-        document.getElementById('btn-monthly').classList.toggle('active', !isAnnual);
-        document.getElementById('btn-monthly').setAttribute('aria-selected', !isAnnual);
-
-        document.querySelectorAll('.pricing-card[data-plan]').forEach(card => {
-            const key = card.dataset.plan;
-            const amountEl = document.getElementById('amount-' + key);
-            if (!amountEl) return;
-            const monthly = parseFloat(amountEl.dataset.monthly);
-            const annualMonthly = parseFloat(amountEl.dataset.annual);
-            const annualTotal = parseFloat(amountEl.dataset.annualTotal);
-            const suffix = document.getElementById('suffix-' + key);
-            const detail = document.getElementById('detail-' + key);
-            const prefix = document.getElementById('prefix-' + key);
-            const originalEl = document.getElementById('original-' + key);
-            const originalLine = document.getElementById('original-line-' + key);
-
-            if (isAnnual) {
-                amountEl.textContent = annualMonthly.toFixed(2).replace('.', ',') + '€';
-                if (suffix) suffix.textContent = '/mois';
-                if (prefix) prefix.textContent = '';
-                if (detail) detail.textContent = 'Facturé ' + annualTotal.toFixed(2).replace('.', ',') + '€/an (soit ' + annualMonthly.toFixed(2).replace('.', ',') + '€/mois)';
-                if (originalLine) originalLine.style.display = monthly > annualMonthly ? '' : 'none';
-                if (originalEl) {
-                    originalEl.textContent = monthly.toFixed(2).replace('.', ',') + '€';
-                }
-            } else {
-                amountEl.textContent = monthly.toFixed(2).replace('.', ',') + '€';
-                if (suffix) suffix.textContent = '/mois';
-                if (prefix) prefix.textContent = '';
-                if (detail) detail.textContent = 'Facturé ' + monthly.toFixed(2).replace('.', ',') + '€/mois';
-                if (originalLine) originalLine.style.display = 'none';
-            }
-        });
+    {% for key, plan in plans.items() %}
+    {% if plan.monthly_price > 0 and key != 'starter' %}
+    const priceEl{{ key }} = document.getElementById('price-{{ key }}');
+    if(priceEl{{ key }}){
+        priceEl{{ key }}.textContent = (period==='annual' ? priceEl{{ key }}.dataset.annual : priceEl{{ key }}.dataset.monthly) + '€';
     }
+    const totalEl{{ key }} = document.getElementById('total-{{ key }}');
+    const intervalEl{{ key }} = document.getElementById('interval-{{ key }}');
+    if(totalEl{{ key }}){
+        totalEl{{ key }}.textContent = (period==='annual' ? totalEl{{ key }}.dataset.annual : totalEl{{ key }}.dataset.monthly) + '€';
+        intervalEl{{ key }}.textContent = period==='annual' ? 'an' : 'mois';
+    }
+    {% endif %}
+    {% endfor %}
 
-    // Checkout handler
-    document.querySelectorAll('.checkout-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            if (!isAuthenticated) {
-                window.location.href = '/signup?next=/pricing';
-                return;
-            }
-            const plan = this.dataset.plan;
-            const billing = document.getElementById('btn-annual').classList.contains('active') ? 'annual' : 'monthly';
-            const originalText = this.textContent;
-            this.disabled = true;
-            this.textContent = 'Activation...';
-            try {
-                const form = new FormData();
-                form.append('plan', plan);
-                form.append('billing', billing);
-                const res = await fetch('/api/stripe/create-checkout', {
-                    method: 'POST',
-                    body: form
-                });
-                const data = await res.json();
-                if (res.ok && data.mode === 'autonomous') {
-                    alert(data.message || 'Plan activé en mode autonome.');
-                    window.location.href = data.redirect_url || '/dashboard';
-                } else if (res.ok && data.url) {
-                    window.location.href = data.url;
-                } else {
-                    alert(data.detail || data.error || 'Erreur de paiement. Vérifiez vos informations.');
-                    this.disabled = false;
-                    this.textContent = originalText;
-                }
-            } catch (e) {
-                alert('Erreur réseau. Veuillez réessayer.');
-                this.disabled = false;
-                this.textContent = originalText;
-            }
-        });
+    // For Starter, annual alternative: 2 months free -> 29,90€/an
+    const recurring = document.getElementById('recurring-starter');
+    const priceStarter = document.getElementById('price-starter');
+    if(recurring && priceStarter){
+        if(period==='annual'){
+            priceStarter.textContent = '24,90€';
+            recurring.textContent = '2,08€';
+            priceStarter.style.fontSize = '2.8rem';
+        } else {
+            priceStarter.textContent = '1€';
+            recurring.textContent = '2,99€';
+            priceStarter.style.fontSize = '';
+        }
+    }
+}
+
+document.querySelectorAll('.checkout-btn').forEach(btn=>{
+    btn.addEventListener('click', async function(){
+        const plan = this.dataset.plan;
+        const promo = this.dataset.promo || '';
+        const body = new FormData();
+        body.append('plan', plan);
+        body.append('billing', currentBilling);
+        if(promo) body.append('promo', promo);
+        try {
+            const res = await fetch('/api/stripe/create-checkout', {method:'POST', body});
+            const data = await res.json();
+            if(data.url) window.location.href = data.url;
+            else if(data.redirect_url) window.location.href = data.redirect_url;
+            else window.showToast(data.message || 'Erreur checkout');
+        } catch(e){
+            window.showToast('Erreur de connexion');
+        }
     });
-
-    // Free plan CTA
-    const freeCta = document.getElementById('free-plan-link');
-    if (freeCta) {
-        freeCta.addEventListener('click', function(e) {
-            if (!isAuthenticated) {
-                e.preventDefault();
-                window.location.href = '/signup?next=/pricing';
-            }
-        });
-    }
-
-    // Mobile nav toggle
-    const navToggle = document.getElementById('nav-toggle');
-    const navLinks = document.getElementById('nav-links');
-    if (navToggle && navLinks) {
-        navToggle.addEventListener('click', () => {
-            navLinks.classList.toggle('open');
-            const expanded = navLinks.classList.contains('open');
-            navToggle.setAttribute('aria-expanded', expanded);
-        });
-    }
-
-    // Cookie banner
-    const cookieBanner = document.getElementById('cookie-banner');
-    const cookieOk = document.getElementById('cookie-ok');
-    if (cookieBanner && cookieOk && !localStorage.getItem('cookies_accepted')) {
-        cookieBanner.classList.add('show');
-        cookieOk.addEventListener('click', () => {
-            localStorage.setItem('cookies_accepted', '1');
-            cookieBanner.classList.remove('show');
-        });
-    }
-
-    // Initial render for annual default (matches the active tab on load)
-    switchBilling('annual');
+});
 </script>
-
-
 {% endblock %}
