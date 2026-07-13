@@ -1,34 +1,164 @@
-// YT Cut — Frontend JavaScript
-(function() {
+// Yestubers Frontend
+(function(){
     'use strict';
 
-    // ─── Utility ─────────────────────────────────────
-    window.logout = function() {
-        fetch('/api/auth/logout', { method: 'POST' })
-            .then(() => { window.location.href = '/'; });
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    document.body.appendChild(toast);
+    window.showToast = (msg) => {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(()=>toast.classList.remove('show'), 4000);
     };
 
-    // ─── Modal ───────────────────────────────────────
-    window.closeModal = function() {
-        const m = document.getElementById('cut-modal');
-        if (m) m.style.display = 'none';
+    window.logout = function(){
+        fetch('/api/auth/logout',{method:'POST'}).then(()=>window.location.href='/');
     };
+
+    // Mobile nav toggle
+    const toggle = document.getElementById('nav-toggle');
+    const links = document.getElementById('nav-links');
+    if (toggle && links) toggle.addEventListener('click', ()=>links.classList.toggle('open'));
+
+    // Tab switch for video/audio in index converter
+    window.switchTab = function(tab){
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+        const videoGroup = document.getElementById('video-formats');
+        const audioGroup = document.getElementById('audio-formats');
+        const select = document.getElementById('format-select');
+        if(tab==='audio'){
+            videoGroup.classList.add('hidden');
+            audioGroup.classList.remove('hidden');
+            if(select.value.startsWith('mp4')) select.value = audioGroup.querySelector('option') ? audioGroup.querySelector('option').value : 'mp3';
+        } else {
+            audioGroup.classList.add('hidden');
+            videoGroup.classList.remove('hidden');
+            if(!select.value.startsWith('mp4')) select.value = 'mp4';
+        }
+        enforceAnonLimits();
+    };
+
+    window.pasteUrl = async function(){
+        const input = document.getElementById('video-url');
+        try {
+            const text = await navigator.clipboard.readText();
+            input.value = text.trim();
+            input.focus();
+            enforceAnonLimits();
+        } catch(e){
+            window.showToast('Autorisez le presse-papiers pour coller automatiquement.');
+        }
+    };
+
+    // Show locked-message if anonymous and non-free format selected
+    window.enforceAnonLimits = function(){
+        const select = document.getElementById('format-select');
+        const msg = document.getElementById('anon-limit-msg');
+        if(!select || !msg) return;
+        const anon = document.body.dataset.user !== '1';
+        if(!anon){ msg.style.display='none'; return; }
+        const val = select.value;
+        const locked = (val.startsWith('mp3') || val.startsWith('m4a') || val.startsWith('wav') ||
+                        (val.startsWith('mp4') && val !== 'mp4') || document.getElementById('playlist-check')?.checked);
+        msg.style.display = locked ? 'block' : 'none';
+    };
+
+    // Counter animation for total conversions (if present)
+    const counter = document.getElementById('conv-counter');
+    if(counter){
+        const raw = counter.textContent.replace(/[^0-9]/g,'');
+        const target = parseInt(raw)||0;
+        let current=0;
+        const step = Math.ceil(target/40);
+        const fmt = n => n.toLocaleString('fr-FR');
+        const t = setInterval(()=>{
+            current = Math.min(target, current+step);
+            counter.textContent = fmt(current) + ' vidéos traitées';
+            if(current>=target) clearInterval(t);
+        },30);
+    }
 
     // Close modal on background click
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function(e){
         const modal = document.getElementById('cut-modal');
-        if (modal && e.target === modal) {
-            modal.style.display = 'none';
-        }
+        if(modal && e.target===modal) modal.style.display='none';
     });
 
-    // ─── Enter key in URL inputs ─────────────────────
-    document.querySelectorAll('input[type="url"]').forEach(function(input) {
-        input.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                const btn = this.closest('.download-box')?.querySelector('button');
-                if (btn && typeof btn.onclick === 'function') btn.click();
-            }
+    // Bind Enter on URL input to startPublicDownload
+    const urlInput = document.getElementById('video-url');
+    if(urlInput){
+        urlInput.addEventListener('keydown', e=>{
+            if(e.key==='Enter') window.startPublicDownload();
         });
-    });
+    }
 })();
+
+async function startPublicDownload(){
+    const input = document.getElementById('video-url');
+    const btn = document.getElementById('download-btn');
+    const btnText = btn.querySelector('.btn-text');
+    const loader = btn.querySelector('.btn-loader');
+    const progressArea = document.getElementById('progress-area');
+    const progressBar = document.getElementById('progress-bar');
+    const progressPercent = document.getElementById('progress-percent');
+    const progressStatus = document.getElementById('progress-status');
+    const formatSelect = document.getElementById('format-select');
+
+    const url = (input.value||'').trim();
+    if(!url){ window.showToast('Collez un lien YouTube'); return; }
+
+    const fmtVal = formatSelect.value || 'mp4';
+    let fmt = 'mp4', quality = '360';
+    if(fmtVal.startsWith('mp3')){ fmt='mp3'; quality='192'; }
+    else if(fmtVal.startsWith('mp4-hd1080')){ quality='1080'; }
+    else if(fmtVal.startsWith('mp4-hd')){ quality='720'; }
+    else if(fmtVal.startsWith('mp4-2k')){ quality='1440'; }
+    else if(fmtVal.startsWith('mp4-4k')){ quality='2160'; }
+
+    btn.disabled = true;
+    btnText.textContent = 'Conversion en cours…';
+    loader.classList.remove('hidden');
+    progressArea.classList.remove('hidden');
+    progressBar.style.width = '10%';
+    progressPercent.textContent = '10%';
+    progressStatus.textContent = 'Analyse du lien…';
+
+    try {
+        const form = new FormData();
+        form.append('url', url);
+        form.append('format', fmt);
+        form.append('quality', quality);
+        const res = await fetch('/api/download', {
+            method: 'POST',
+            body: form
+        });
+        if(!res.ok){
+            const err = await res.json().catch(()=>({}));
+            throw new Error(err.detail || err.message || 'Erreur '+res.status);
+        }
+        const data = await res.json();
+        progressBar.style.width = '80%';
+        progressPercent.textContent = '80%';
+        progressStatus.textContent = 'Téléchargement en cours…';
+
+        // Public download is synchronous in this endpoint; launch file download now.
+        setTimeout(() => {
+            progressBar.style.width = '100%';
+            progressPercent.textContent = '100%';
+            progressStatus.textContent = 'Terminé, lancement du téléchargement…';
+            window.location.href = data.download_url || ('/api/download/'+data.video_id+'/file');
+            setTimeout(() => {
+                btn.disabled=false; btnText.textContent='Télécharger gratuitement'; loader.classList.add('hidden');
+                progressArea.classList.add('hidden'); progressBar.style.width='0%'; progressPercent.textContent='0%';
+            }, 3000);
+        }, 600);
+    } catch(e){
+        btn.disabled=false; btnText.textContent='Télécharger gratuitement'; loader.classList.add('hidden');
+        progressArea.classList.add('hidden'); progressBar.style.width='0%'; progressPercent.textContent='0%';
+        window.showToast(e.message || 'Erreur inattendue');
+        if(e.message.includes('quota') || e.message.includes('compte')){
+            setTimeout(()=>window.location.href='/signup', 1500);
+        }
+    }
+}

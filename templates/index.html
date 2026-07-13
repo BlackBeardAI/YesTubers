@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}{{ i18n.title_home }} | {{ i18n.brand }}{% endblock %}
@@ -10,528 +11,203 @@
 
 {% block content %}
 
-    <!-- Animated gradient background -->
-    <div class="ambient-bg"></div>
-
-    
-
 {% if anon %}
 <div class="anon-top-banner" id="anonTopBanner">
     <div class="container banner-inner">
-        <span class="banner-text">🚀 <strong>3 crédits gratuits par mois</strong> — débloquez MP3, HD 1080p et le cutter. <a href="/signup" class="banner-cta">Créer un compte gratuit →</a></span>
+        <span class="banner-text">🚀 <strong>3 crédits gratuits par mois</strong> — débloquez MP3, HD et le cutter. <a href="/signup" class="banner-cta">Créer un compte gratuit →</a></span>
         <button class="banner-close" onclick="document.getElementById('anonTopBanner').style.display='none'" aria-label="Fermer">×</button>
     </div>
 </div>
 {% endif %}
 
-    <header class="hero">
-        <div class="container hero-container">
+<style>
+.anon-top-banner { background: #0f172a; color: #fff; font-size: .88rem; padding: 12px 0; }
+.banner-inner { display: flex; align-items: center; justify-content: center; gap: 16px; }
+.banner-cta { color: #60a5fa; font-weight: 700; text-decoration: none; }
+.banner-close { background: none; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; }
+</style>
+
+<header class="hero">
+    <div class="container">
         <div class="hero-badge">
             <span class="pulse"></span>
-            <span id="conv-counter">{{ "{:,}".format(total_conversions).replace(',', ' ') }} vidéos converties · 3 crédits gratuits par mois</span>
+            <span id="conv-counter">{{ "{:,}".format(total_conversions).replace(',', ' ') }} vidéos traitées</span>
         </div>
-            <h1>{{ i18n.hero_h1_part1 }} <span class="gradient-text">MP3 ou MP4 HD</span></h1>
-            <p class="hero-subtitle">{{ i18n.hero_sub }}</p>
-            <div class="hero-cta-row">
-                <a href="/pricing" class="btn-cta btn-lg">🚀 Passer Premium — dès 5.99€/mois</a>
-                <span class="hero-guarantee">✓ Sans engagement · 14 jours satisfait ou remboursé</span>
-            </div>
-
-            <!-- CONVERTER BOX -->
-            <div class="converter-card" id="converter">
-                <div class="converter-tabs">
-                    <button class="tab-btn active" data-tab="video" onclick="switchTab('video')">{{ i18n.tab_video }}</button>
-                    <button class="tab-btn" data-tab="audio" onclick="switchTab('audio')">{{ i18n.tab_audio }}</button>
-                </div>
-
-                <div class="converter-body">
-                    <div class="input-wrapper">
-                        <svg class="input-icon" viewBox="0 0 24 24" fill="none">
-                            <path d="M10 13a5 5 0 007.54.54l3.58 3.58a8 8 0 11-2.12-2.12l-3.58-3.58A5 5 0 0110 13z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <input type="text" id="video-url" placeholder="{{ i18n.cta_placeholder }}" autocomplete="off">
-                        <button class="paste-btn" onclick="pasteUrl()" title="{{ i18n.paste }}">{{ i18n.paste }}</button>
-                    </div>
-
-                    {% set anon = not user %}
-                    <div class="options-row">
-                        <div class="format-selector">
-                            <label>{{ i18n.format_label }}</label>
-                            <select id="format-select" onchange="enforceAnonLimits()">
-                                <optgroup label="🎬 Vidéo" id="video-formats">
-                                    <option value="mp4" selected>MP4 — 360p (aperçu){% if anon %} 🔒{% endif %}</option>
-                                    {% if not anon %}<option value="mp4-hd">MP4 HD — 720p</option>{% endif %}
-                                    {% if not anon %}<option value="mp4-hd1080">MP4 HD — 1080p</option>{% endif %}
-                                    {% if not anon %}<option value="mp4-2k">MP4 2K — 1440p</option>{% endif %}
-                                    {% if not anon %}<option value="mp4-4k">MP4 4K — 2160p</option>{% endif %}
-                                </optgroup>
-                                <optgroup label="🎵 Audio" id="audio-formats" class="hidden">
-                                    {% if not anon %}<option value="mp3">MP3 — 192kbps</option>{% endif %}
-                                    {% if not anon %}<option value="mp3-hd">MP3 HD — 320kbps</option>{% endif %}
-                                    {% if not anon %}<option value="m4a">M4A — AAC</option>{% endif %}
-                                    {% if not anon %}<option value="wav">WAV — Lossless</option>{% endif %}
-                                </optgroup>
-                            </select>
-                            <p id="anon-limit-msg" class="anon-limit" style="display:none; margin:0.25rem 0 0; font-size:0.8rem; color:var(--primary);">🔒 MP3, HD et le cutter nécessitent un compte gratuit.</p>
-                        </div>
-
-                        <label class="toggle">
-                            <input type="checkbox" id="playlist-check" {% if anon %}disabled{% endif %}>
-                            <span class="toggle-slider"></span>
-                            <span class="toggle-label">{{ i18n.playlist }} {% if anon %}(Premium){% endif %}</span>
-                        </label>
-                    </div>
-
-                    <button class="btn-download" id="download-btn" onclick="startPublicDownload()">
-                        <span class="btn-text">{{ i18n.cta_button }}</span>
-                        <span class="btn-loader hidden"></span>
-                    </button>
-
-                    <!-- Progress + Status -->
-                    <div class="progress-area hidden" id="progress-area">
-                        <div class="progress-info">
-                            <span id="progress-status">{{ i18n.status_preparing }}</span>
-                            <span id="progress-percent">0%</span>
-                        </div>
-                        <div class="progress-track">
-                            <div class="progress-bar" id="progress-bar"></div>
-                        </div>
-                    </div>
-
-                    <!-- Video Preview -->
-                    <div class="video-preview hidden" id="video-preview">
-                        <img src="" alt="" class="preview-thumb" id="preview-thumb" loading="lazy" decoding="async">
-                        <div class="preview-meta">
-                            <h3 id="preview-title"></h3>
-                            <div class="preview-stats"
-                                <span id="preview-duration"></span>
-                                <span id="preview-channel"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="status-msg hidden" id="status-msg"></div>
-                </div>
-            </div>
-
-            {% if not user %}
-            <!-- Signup modal shown to anonymous users when they try premium features -->
-            <div class="signup-modal" id="signupModal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(19,78,74,0.45); align-items:center; justify-content:center;">
-                <div class="signup-modal-card" style="background:#ffffff; border:1px solid var(--border); border-radius:1rem; padding:2rem; max-width:420px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(19,78,74,0.12);">
-                    <div style="font-size:2rem; margin-bottom:0.5rem;">🔒</div>
-                    <h2 id="signupModalTitle" style="margin:0 0 0.5rem; font-size:1.5rem;">Débloquez tout gratuitement</h2>
-                    <p style="color:var(--text-muted); margin-bottom:1.5rem;">
-                        Créez un compte gratuit pour obtenir :<br>
-                        <strong id="signupModalSub">3 crédits par mois · MP3 · HD 1080p · Découpe</strong>
-                    </p>
-                    <ul style="text-align:left; color:var(--text-muted); font-size:0.95rem; margin:0 0 1.5rem; padding-left:1.2rem;">
-                        <li>Télécharger en MP3 / MP4 HD</li>
-                        <li>Couper des extraits précis</li>
-                        <li>Sauvegarder votre historique</li>
-                        <li>Recevoir les nouveaux crédits chaque mois</li>
-                    </ul>
-                    <a href="/signup" class="btn-cta full-width" style="margin-bottom:0.75rem; display:block;">Créer un compte gratuit →</a>
-                    <a href="/pricing" class="btn-secondary" style="display:block; margin-bottom:0.75rem;">Voir les plans Premium</a>
-                    <button onclick="document.getElementById('signupModal').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem;">Continuer avec la version gratuite</button>
-                </div>
-            </div>
-            {% endif %}
-
-            <div class="trust-row">
-                <div class="trust-item"><span>⚡</span> {{ i18n.trust_1 }}</div>
-                <div class="trust-item"><span>🔒</span> {{ i18n.trust_2 }}</div>
-                <div class="trust-item"><span>🌍</span> {{ i18n.trust_3 }}</div>
-            </div>
+        <h1>Téléchargez et découpez <span class="gradient-text">n'importe quelle vidéo YouTube</span></h1>
+        <p class="hero-subtitle">Collez un lien, choisissez MP3 ou MP4, et obtenez votre fichier en quelques secondes. Inscription gratuite pour HD, MP3 et découpe.</p>
+        <div class="hero-cta-row">
+            <a href="#converter" class="btn-cta">Convertir une vidéo maintenant</a>
+            <a href="/pricing" class="btn-secondary">Voir les tarifs</a>
         </div>
-    </header>
-
-    <!-- Supported platforms -->
-    <section class="platforms">
-        <div class="container">
-            <p class="section-label">{{ i18n.compatible }}</p>
-            <div class="platforms-row">
-                <div class="platform-badge"><span>▶️</span> YouTube</div>
-                <div class="platform-badge"><span>🎵</span> TikTok</div>
-                <div class="platform-badge"><span>📸</span> Instagram</div>
-                <div class="platform-badge"><span>💬</span> Facebook</div>
-                <div class="platform-badge"><span>🐦</span> X / Twitter</div>
-                <div class="platform-badge"><span>🎮</span> Twitch</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features -->
-
-    <!-- AD BANNER FOR FREE USERS -->
-    {% if not user or user.plan == 'free' %}
-    <div class="ad-banner" id="adBanner">
-        <span class="ad-label">Publicité</span>
-        <span class="ad-text">Passez Premium : sans pub, plus de qualité, plus de crédits.</span>
-        <a href="/pricing" class="ad-cta">{{ i18n.upgrade_badge }}</a>
-        <button class="ad-close" onclick="document.getElementById('adBanner').style.display='none'">×</button>
     </div>
-    {% endif %}
+</header>
 
-    <section class="features" id="features">
-        <div class="container">
-            <h2 class="section-title">{{ i18n.why_title }} <span class="gradient-text">Yestubers</span> ?</h2>
-            <p class="section-subtitle">{{ i18n.why_sub }}</p>
+<section class="converter-section" id="converter">
+    <div class="container">
+        <div class="converter-card">
+            <div class="converter-tabs">
+                <button class="tab-btn active" data-tab="video" onclick="switchTab('video')">Vidéo MP4</button>
+                <button class="tab-btn" data-tab="audio" onclick="switchTab('audio')">Audio MP3</button>
+            </div>
+            <div class="converter-body">
+                <div class="input-wrapper">
+                    <svg class="input-icon" viewBox="0 0 24 24" fill="none">
+                        <path d="M10 13a5 5 0 007.54.54l3.58 3.58a8 8 0 11-2.12-2.12l-3.58-3.58A5 5 0 0110 13z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <input type="text" id="video-url" placeholder="Collez le lien YouTube ici…" autocomplete="off">
+                    <button class="paste-btn" onclick="pasteUrl()" title="Coller">Coller</button>
+                </div>
 
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon gradient-1">🎵</div>
-                    <h3>{{ i18n.feature_mp3_title }}</h3>
-                    <p>{{ i18n.feature_mp3_text }}</p>
+                
+                <div class="options-row">
+                    <div class="format-selector">
+                        <label>Format</label>
+                        <select id="format-select" onchange="enforceAnonLimits()">
+                            <optgroup label="Vidéo" id="video-formats">
+                                <option value="mp4" selected>MP4 — 360p (aperçu){% if anon %} 🔒{% endif %}</option>
+                                {% if not anon %}<option value="mp4-hd">MP4 HD — 720p</option>{% endif %}
+                                {% if not anon %}<option value="mp4-hd1080">MP4 Full HD — 1080p</option>{% endif %}
+                                {% if not anon %}<option value="mp4-2k">MP4 2K — 1440p</option>{% endif %}
+                                {% if not anon %}<option value="mp4-4k">MP4 4K — 2160p</option>{% endif %}
+                            </optgroup>
+                            <optgroup label="Audio" id="audio-formats" class="hidden">
+                                {% if not anon %}<option value="mp3">MP3 — 192kbps</option>{% endif %}
+                                {% if not anon %}<option value="mp3-hd">MP3 HD — 320kbps</option>{% endif %}
+                                {% if not anon %}<option value="m4a">M4A — AAC</option>{% endif %}
+                                {% if not anon %}<option value="wav">WAV — Lossless</option>{% endif %}
+                            </optgroup>
+                        </select>
+                        <p id="anon-limit-msg" class="anon-limit" style="display:none">🔒 MP3, HD et le cutter nécessitent un compte gratuit.</p>
+                    </div>
+                    <label class="toggle" style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:.88rem;">
+                        <input type="checkbox" id="playlist-check" {% if anon %}disabled{% endif %}>
+                        Playlist {% if anon %}(compte requis){% endif %}
+                    </label>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon gradient-2">🎬</div>
-                    <h3>{{ i18n.feature_mp4_title }}</h3>
-                    <p>{{ i18n.feature_mp4_text }}</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon gradient-3">⚡</div>
-                    <h3>{{ i18n.feature_speed_title }}</h3>
-                    <p>{{ i18n.feature_speed_text }}</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon gradient-4">🔒</div>
-                    <h3>{{ i18n.feature_anon_title }}</h3>
-                    <p>{{ i18n.feature_anon_text }}</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon gradient-5">📱</div>
-                    <h3>{{ i18n.feature_devices_title }}</h3>
-                    <p>{{ i18n.feature_devices_text }}</p>
-                </div>
-                <div class="feature-card feature-upsell">
-                    <div class="feature-icon gradient-6">✂️</div>
-                    <h3>{{ i18n.feature_cut_title }}</h3>
-                    <p>{{ i18n.feature_cut_text }}</p>
-                    <a href="/pricing" class="btn-sm btn-primary">Débloquer avec Pro →</a>
+
+                <button class="btn-download" id="download-btn" onclick="startPublicDownload()">
+                    <span class="btn-text">Télécharger gratuitement</span>
+                    <span class="btn-loader hidden"></span>
+                </button>
+
+                <div class="progress-area hidden" id="progress-area">
+                    <div class="progress-info">
+                        <span id="progress-status">Préparation…</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Pricing teaser -->
-    <section class="pricing-teaser">
-        <div class="container">
-            <div class="pricing-teaser-card">
-                <div class="teaser-text">
-                    <h2>{{ i18n.teaser_title }}</h2>
-                    <p>{{ i18n.teaser_text }}</p>
-                </div>
-                <div class="teaser-price">
-                    <div class="price">{{ i18n.teaser_price | safe }}</div>
-                    <div class="savings">Économisez 2 mois avec l'annuel</div>
-                    <a href="/pricing" class="btn-cta">{{ i18n.teaser_cta }}</a>
-                </div>
+<section class="section" style="background:var(--surface)">
+    <div class="container">
+        <div class="section-header">
+            <h2>Pourquoi choisir Yestubers ?</h2>
+            <p>Une expérience pensée pour les créateurs, les étudiants et tous ceux qui veulent aller vite.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Rapide</h3>
+                <p>Téléchargement optimisé. Pas de files d'attente, pas de publicités intrusives.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎬</div>
+                <h3>MP4 & MP3</h3>
+                <p>Vidéo HD jusqu'à 4K ou audio haute qualité. Un seul outil pour tout.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">✂️</div>
+                <h3>Découpe intégrée</h3>
+                <p>Gardez uniquement le segment qui compte. Idéal pour les shorts, extraits, révisions.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>Sans traces</h3>
+                <p>Aucune vidéo n'est conservée sur nos serveurs. Seul votre historique compte.</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- FAQ -->
-    <section class="faq" id="faq">
-        <div class="container">
-            <h2 class="section-title">{{ i18n.faq_title }}</h2>
-            <div class="faq-grid">
-                <div class="faq-card">
-                    <h3>{{ i18n.faq_q1 }}</h3>
-                    <p>{{ i18n.faq_a1 }}</p>
-                </div>
-                <div class="faq-card">
-                    <h3>{{ i18n.faq_q2 }}</h3>
-                    <p>{{ i18n.faq_a2 }}</p>
-                </div>
-                <div class="faq-card">
-                    <h3>{{ i18n.faq_q3 }}</h3>
-                    <p>{{ i18n.faq_a3 }}</p>
-                </div>
-                <div class="faq-card">
-                    <h3>{{ i18n.faq_q4 }}</h3>
-                    <p>Oui, cochez l'option "{{ i18n.playlist }}" et nous compresserons toutes les vidéos dans un fichier ZIP.</p>
-                </div>
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Des tarifs simples</h2>
+            <p>Commencez gratuitement, passez Premium quand vous avez besoin de plus.</p>
+        </div>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Gratuit</h3>
+                <p class="plan-desc">Pour tester l'outil</p>
+                <div class="price">0€<span>/mois</span></div>
+                <ul class="plan-features">
+                    <li>3 crédits par mois</li>
+                    <li>MP4 360p</li>
+                    <li>Historique limité</li>
+                </ul>
+                <a href="/signup" class="btn-plan secondary">Créer un compte</a>
+            </div>
+            <div class="pricing-card popular">
+                <div class="popular-badge">Le plus populaire</div>
+                <h3>Creator</h3>
+                <p class="plan-desc">Pour les créateurs réguliers</p>
+                <div class="price">7.99€<span>/mois</span></div>
+                <p class="price-detail">Facturé 95.88€/an ou 9.99€/mois</p>
+                <ul class="plan-features">
+                    <li>100 crédits/mois</li>
+                    <li>MP3, MP4 jusqu'à 1080p</li>
+                    <li>Découpe illimitée</li>
+                    <li>Support prioritaire</li>
+                </ul>
+                <a href="/pricing" class="btn-plan primary">Passer Premium</a>
+            </div>
+            <div class="pricing-card">
+                <h3>Pro</h3>
+                <p class="plan-desc">Pour les équipes et pros</p>
+                <div class="price">15.99€<span>/mois</span></div>
+                <p class="price-detail">4K, API, usage illimité</p>
+                <ul class="plan-features">
+                    <li>Crédits illimités</li>
+                    <li>MP4 jusqu'à 4K</li>
+                    <li>Accès API</li>
+                    <li>Priorité maximale</li>
+                </ul>
+                <a href="/pricing" class="btn-plan secondary">Voir Pro</a>
             </div>
         </div>
-    </section>
-
-    
-
-    <!-- Cookie consent -->
-    <div class="cookie-banner" id="cookie-banner" style="display:none;">
-        <p>🍪 {{ i18n.cookie_text }} <a href="/privacy">En savoir plus</a>.</p>
-        <button class="btn-sm" onclick="acceptCookies()">OK</button>
     </div>
+</section>
 
-    <script src="https://js.stripe.com/v3/"></script>
-    
-    <script>
-    // Tab switching
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-        const select = document.getElementById('format-select');
-        const isAuth = {{ 'true' if user else 'false' }};
-        if (tab === 'audio') {
-            document.getElementById('video-formats').classList.add('hidden');
-            const audioGroup = document.getElementById('audio-formats');
-            audioGroup.classList.remove('hidden');
-            if (isAuth) {
-                select.value = 'mp3';
-            } else {
-                // Audio is auth-only: show signup modal instead
-                audioGroup.classList.add('hidden');
-                document.getElementById('video-formats').classList.remove('hidden');
-                showSignupModal();
-                return;
-            }
-        } else {
-            document.getElementById('audio-formats').classList.add('hidden');
-            document.getElementById('video-formats').classList.remove('hidden');
-            select.value = 'mp4';
-        }
-    }
-
-    function enforceAnonLimits() {
-        const isAuth = {{ 'true' if user else 'false' }};
-        if (isAuth) return;
-        const select = document.getElementById('format-select');
-        const msg = document.getElementById('anon-limit-msg');
-        if (select.value !== 'mp4') {
-            select.value = 'mp4';
-            msg.style.display = 'block';
-            setTimeout(() => msg.style.display = 'none', 3000);
-            showSignupModal();
-        }
-    }
-
-    function showSignupModal() {
-        const modal = document.getElementById('signupModal');
-        if (modal) modal.style.display = 'flex';
-    }
-
-    function pasteUrl() {
-        navigator.clipboard.readText().then(text => {
-            document.getElementById('video-url').value = text;
-            fetchVideoInfo(text);
-        });
-    }
-
-    document.getElementById('video-url').addEventListener('paste', e => {
-        setTimeout(() => fetchVideoInfo(e.target.value), 100);
-    });
-
-    document.getElementById('video-url').addEventListener('keypress', e => {
-        if (e.key === 'Enter') startPublicDownload();
-    });
-
-    let infoTimeout;
-    async function fetchVideoInfo(url) {
-        if (!url || !url.includes('http')) return;
-        clearTimeout(infoTimeout);
-        infoTimeout = setTimeout(async () => {
-            try {
-                const r = await fetch(`/api/info?url=${encodeURIComponent(url)}`);
-                if (!r.ok) return;
-                const data = await r.json();
-                const preview = document.getElementById('video-preview');
-                preview.classList.remove('hidden');
-                document.getElementById('preview-thumb').src = data.thumbnail || '';
-                document.getElementById('preview-title').textContent = data.title || '';
-                document.getElementById('preview-duration').textContent = '🕒 ' + (data.duration || '0:00');
-                document.getElementById('preview-channel').textContent = '👤 ' + (data.uploader || '');
-            } catch (e) { console.error(e); }
-        }, 500);
-    }
-
-    const isAuthenticated = {{ "true" if user else "false" }};
-
-    async function startPublicDownload() {
-        const url = document.getElementById('video-url').value.trim();
-        const format = document.getElementById('format-select').value;
-        const playlist = document.getElementById('playlist-check').checked;
-        const btn = document.getElementById('download-btn');
-        const status = document.getElementById('status-msg');
-        const progressArea = document.getElementById('progress-area');
-        const bar = document.getElementById('progress-bar');
-        const pct = document.getElementById('progress-percent');
-
-        if (!url) { showStatus('Collez un lien d\'abord.', 'error'); return; }
-
-        btn.disabled = true;
-        btn.querySelector('.btn-text').textContent = 'Téléchargement...';
-        btn.querySelector('.btn-loader').classList.remove('hidden');
-        progressArea.classList.remove('hidden');
-        status.classList.add('hidden');
-
-        let progress = 0;
-        const interval = setInterval(() => {
-            if (progress < 90) progress += Math.random() * 3;
-            bar.style.width = progress + '%';
-            pct.textContent = Math.round(progress) + '%';
-        }, 300);
-
-        try {
-            const form = new FormData();
-            form.append('url', url);
-            form.append('format', format);
-            if (playlist) form.append('playlist', 'true');
-
-            // Authenticated users get plan limits and credits; anonymous users get public teaser.
-            const endpoint = isAuthenticated ? '/api/videos/download' : '/api/download';
-            const r = await fetch(endpoint, { method: 'POST', body: form });
-            const data = await r.json().catch(() => ({}));
-
-            if (!r.ok) {
-                clearInterval(interval);
-                if (r.status === 429 || data.detail === 'quota_anon_exceeded' || data.detail === 'signup_required') {
-                    showSignupModal();
-                }
-                throw new Error(data.detail || 'Erreur de téléchargement');
-            }
-
-            const remaining = isAuthenticated ? data.remaining_credits : data.remaining_anonymous;
-
-            // Fetch file as blob
-            const fileR = await fetch(data.download_url);
-            if (!fileR.ok) {
-                clearInterval(interval);
-                throw new Error('Erreur lors du téléchargement du fichier');
-            }
-
-            clearInterval(interval);
-            bar.style.width = '100%';
-            pct.textContent = '100%';
-            document.getElementById('progress-status').textContent = '{{ i18n.status_finalizing }}';
-
-            const blob = await fileR.blob();
-            const cd = fileR.headers.get('content-disposition') || '';
-            const fnameMatch = cd.match(/filename="?([^"]+)"?/);
-            const filename = fnameMatch ? fnameMatch[1] : `yestubers_${format}.${format.startsWith('mp3') || format === 'm4a' || format === 'wav' ? 'mp3' : 'mp4'}`;
-
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(a.href);
-
-            showStatus(`✅ Téléchargement terminé ! ${isAuthenticated ? 'Crédits restants : ' + remaining : 'Aperçu 360p disponible. Il vous reste ' + remaining + ' téléchargement gratuit cette semaine.'}`, 'success');
-
-            // If anonymous just consumed their free download, push signup immediately
-            if (!isAuthenticated && remaining <= 0) {
-                setTimeout(() => {
-                    const modal = document.getElementById('signupModal');
-                    if (modal) {
-                        const title = document.getElementById('signupModalTitle');
-                        const sub = document.getElementById('signupModalSub');
-                        if (title) title.textContent = 'Votre aperçu gratuit est terminé';
-                        if (sub) sub.textContent = '3 crédits par mois · MP3 · HD 1080p · Découpe';
-                        modal.style.display = 'flex';
-                    }
-                }, 1200);
-            }
-        } catch (err) {
-            clearInterval(interval);
-            showStatus('❌ ' + err.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.querySelector('.btn-text').textContent = '{{ i18n.cta_button }}';
-            btn.querySelector('.btn-loader').classList.add('hidden');
-        }
-    }
-
-    function showStatus(msg, type) {
-        const el = document.getElementById('status-msg');
-        el.textContent = msg;
-        el.className = 'status-msg ' + type;
-        el.classList.remove('hidden');
-    }
-
-    // Cookie consent
-    const cb = document.getElementById('cookie-banner');
-    if (cb && !localStorage.getItem('cookies-accepted')) {
-        cb.style.display = 'flex';
-        cb.classList.add('show');
-    }
-    function acceptCookies() {
-        localStorage.setItem('cookies-accepted', '1');
-        const cb2 = document.getElementById('cookie-banner');
-        if (cb2) { cb2.classList.remove('show'); cb2.style.display = 'none'; }
-    }
-
-    // Exit-intent popup for anonymous users
-    {% if not user %}
-    (function(){
-        let shown = false;
-        function showExitPopup() {
-            if (shown) return;
-            shown = true;
-            const popup = document.getElementById('exit-popup');
-            if (popup) popup.style.display = 'flex';
-            document.removeEventListener('mouseout', onMouseOut);
-        }
-        function onMouseOut(e) {
-            if (e.clientY < 20) showExitPopup();
-        }
-        document.addEventListener('mouseout', onMouseOut);
-        setTimeout(() => {
-            if (!shown) showExitPopup();
-        }, 60000);
-    })();
-    {% endif %}
-    </script>
-
-
-<script id="nav-links-toggle-js">
-(function(){
-    var toggle = document.getElementById('nav-toggle');
-    var links = document.getElementById('nav-links');
-    if (!toggle || !links) return;
-    toggle.addEventListener('click', function(){
-        links.classList.toggle('open');
-        var isOpen = links.classList.contains('open');
-        links.style.display = isOpen ? 'flex' : '';
-        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    });
-    links.querySelectorAll('a').forEach(function(a){
-        a.addEventListener('click', function(){
-            links.classList.remove('open');
-            toggle.setAttribute('aria-expanded', 'false');
-        });
-    });
-    document.addEventListener('click', function(e){
-        if (!toggle.contains(e.target) && !links.contains(e.target)) {
-            links.classList.remove('open');
-            toggle.setAttribute('aria-expanded', 'false');
-        }
-    });
-})();
-</script>
-{% if not user or user.plan == 'free' %}
-<div class="fixed-upsell" id="fixedUpsell">
-    <div class="fixed-upsell-inner">
-        <span>⭐ Passer Premium : plus de qualité, plus de crédits, sans pub</span>
-        <a href="/pricing" class="btn-sm btn-cta">Voir les tarifs</a>
-        <button class="fixed-upsell-close" onclick="document.getElementById('fixedUpsell').style.display='none'">×</button>
+<section class="cta-banner" style="margin:0">
+    <div class="container">
+        <h2>Prêt à gagner du temps ?</h2>
+        <p>Rejoignez les créateurs qui utilisent Yestubers chaque jour.</p>
+        <a href="/signup" class="btn-secondary">Créer mon compte gratuit →</a>
     </div>
-</div>
-{% endif %}
+</section>
 
-{% if not user %}
-<!-- Exit-intent popup -->
-<div class="signup-modal" id="exit-popup" style="display:none; position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,0.88); align-items:center; justify-content:center;">
-    <div class="signup-modal-card" style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:1.2rem; padding:2.2rem; max-width:460px; width:90%; text-align:center; box-shadow:0 25px 80px rgba(0,0,0,0.6);">
-        <div style="font-size:2.2rem; margin-bottom:0.5rem;">🎁</div>
-        <h2 style="margin:0 0 0.5rem; font-size:1.6rem;">Attendez ! 3 crédits offerts</h2>
-        <p style="color:var(--text-muted); margin-bottom:1.5rem;">Créez un compte gratuit maintenant et débloquez <strong>MP3, HD et la découpe</strong>. Sans engagement.</p>
-        <div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1.2rem;">-20% sur votre 1er mois Premium</div>
-        <a href="/signup" class="btn-cta full-width" style="margin-bottom:0.75rem; display:block;">Créer mon compte gratuit →</a>
-        <a href="/pricing" class="btn-secondary" style="display:block; margin-bottom:0.75rem;">Voir les tarifs</a>
-        <button onclick="document.getElementById('exit-popup').style.display='none'" style="background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:0.9rem;">Non merci, je préfère rester anonyme</button>
+<section class="section" style="background:var(--surface)">
+    <div class="container">
+        <div class="section-header">
+            <h2>Questions fréquentes</h2>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question" onclick="this.nextElementSibling.classList.toggle('hidden')">Est-ce gratuit ? <span>+</span></button>
+            <div class="faq-answer hidden">Oui. Le plan gratuit offre 3 crédits par mois pour télécharger en MP4 360p. Les formats HD, MP3 et la découpe nécessitent un compte.</div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question" onclick="this.nextElementSibling.classList.toggle('hidden')">Les fichiers restent-ils sur le serveur ? <span>+</span></button>
+            <div class="faq-answer hidden">Non. Une fois le téléchargement terminé, le fichier est automatiquement supprimé du serveur. Seul votre historique (titre, URL, vignette) est conservé.</div>
+        </div>
+        <div class="faq-item">
+            <button class="faq-question" onclick="this.nextElementSibling.classList.toggle('hidden')">Puis-je découper une vidéo ? <span>+</span></button>
+            <div class="faq-answer hidden">Oui, la découpe est disponible une fois connecté. Choisissez le début et la fin, le segment est généré à la volée.</div>
+        </div>
     </div>
-</div>
-{% endif %}
-
+</section>
 
 {% endblock %}
