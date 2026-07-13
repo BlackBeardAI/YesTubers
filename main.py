@@ -19,7 +19,7 @@ from types import MappingProxyType
 from typing import Optional
 
 import aiofiles
-from fastapi import FastAPI, Request, UploadFile, File, Form, Depends, HTTPException, Response
+from fastapi import FastAPI, Request, UploadFile, File, Form, Depends, HTTPException, Response, BackgroundTasks
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -2256,7 +2256,7 @@ def send_verification_email(user: User, token: str) -> bool:
     verify_url = f"https://yestubers.cloud/verify-email?token={token}"
     body = f"""<p>Bonjour,</p>
 <p>Merci de rejoindre Yestubers. Confirmez votre adresse email en cliquant sur le lien ci-dessous :</p>
-<p><a href="{verify_url}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Vérifier mon email</a></p>
+<p><a href="{verify_url}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Vérifier mon email</a></p>
 <p>Ou copiez ce lien : {verify_url}</p>
 <p>Ce lien expire dans 24 heures.</p>
 <p>Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.</p>
@@ -2305,10 +2305,7 @@ def get_video_info(url: str) -> dict:
     try:
         js_runtime = ["--js-runtimes", "node"] if shutil.which("node") else []
         result = subprocess.run(
-            ["yt-dlp"] + js_runtime + [
-                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
-                "--dump-json", "--no-playlist", url
-            ],
+            ["yt-dlp"] + js_runtime + ["--dump-json", "--no-playlist", url],
             capture_output=True, text=True, timeout=30
         )
         if result.returncode != 0:
@@ -2318,73 +2315,6 @@ def get_video_info(url: str) -> dict:
         raise Exception("Timeout lors de la récupération des infos")
     except Exception as e:
         raise Exception(f"Erreur: {str(e)}")
-
-
-INVIDIOUS_INSTANCES = [
-    "https://y.com.sb",
-    "https://iv.nboeck.de",
-    "https://iv.datura.network",
-    "https://yt.artemislena.eu",
-    "https://vid.puffyan.us",
-]
-
-def fetch_invidious(video_id: str) -> Optional[dict]:
-    """Fallback: récupère les streams via Invidious quand YouTube bloque le serveur."""
-    import requests
-    for base in INVIDIOUS_INSTANCES:
-        try:
-            r = requests.get(f"{base}/api/v1/videos/{video_id}", timeout=15, headers={"User-Agent": "Yestubers/1.0"})
-            if r.status_code == 200:
-                return r.json()
-        except Exception:
-            continue
-    return None
-
-def pick_invidious_stream(data: dict, max_height: int) -> tuple:
-    """Choisit le meilleur flux vidéo sous max_height + audio."""
-    video_streams = [f for f in data.get("adaptiveFormats", []) if f.get("type", "").startswith("video/") and f.get("url")]
-    audio_streams = [f for f in data.get("adaptiveFormats", []) if f.get("type", "").startswith("audio/") and f.get("url")]
-    best_video = None
-    for s in sorted(video_streams, key=lambda x: int(x.get("bitrate", 0)), reverse=True):
-        h = s.get("height") or s.get("resolution", "").replace("p", "") or 0
-        try:
-            h = int(h)
-        except Exception:
-            h = 9999
-        if h <= max_height:
-            best_video = s
-            break
-    if not best_video and video_streams:
-        best_video = max(video_streams, key=lambda x: int(x.get("bitrate", 0)))
-    best_audio = max(audio_streams, key=lambda x: int(x.get("bitrate", 0))) if audio_streams else None
-    return best_video, best_audio
-
-async def download_invidious(video_id_db: str, data: dict, max_height: int) -> dict:
-    """Télécharge via ffmpeg à partir des URLs Invidious."""
-    out_path = VIDEOS / f"{video_id_db}.mp4"
-    thumb_path = THUMBS / f"{video_id_db}.jpg"
-    vstream, astream = pick_invidious_stream(data, max_height)
-    if not vstream:
-        raise Exception("Aucun flux vidéo trouvé via Invidious")
-    vurl = vstream["url"]
-    aurl = astream["url"] if astream else None
-    if aurl:
-        cmd = [
-            "ffmpeg", "-hide_banner", "-loglevel", "error",
-            "-i", vurl, "-i", aurl,
-            "-c:v", "copy", "-c:a", "copy", "-shortest", "-y", str(out_path)
-        ]
-    else:
-        cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", vurl, "-c", "copy", "-y", str(out_path)]
-    proc = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-    stdout, stderr = await proc.communicate()
-    if proc.returncode != 0:
-        raise Exception(f"Erreur ffmpeg: {stderr.decode()[:500]}")
-    subprocess.run(["ffmpeg", "-i", str(out_path), "-ss", "5", "-vframes", "1", "-q:v", "2", str(thumb_path), "-y"], capture_output=True, timeout=15)
-    duration = int(data.get("lengthSeconds", 0))
-    filesize = out_path.stat().st_size
-    return {"duration": duration, "filename": out_path.name, "filesize": filesize, "thumbnail": thumb_path.name}
-
 
 async def download_video(url: str, video_id_db: str, max_duration: int = 60, quality: str = "480") -> dict:
     """Télécharge une vidéo YouTube selon la qualité du plan."""
@@ -2398,71 +2328,10 @@ async def download_video(url: str, video_id_db: str, max_duration: int = 60, qua
     except Exception:
         info = None
         duration = 0
-        # fallback invidious for duration
+        # fallback: cannot determine duration if yt-dlp failed
         vid_id = extract_video_id(url)
         if vid_id:
-            inv = fetch_invidious(vid_id)
-            if inv:
-                duration = int(inv.get("lengthSeconds", 0))
-
-    if duration > max_duration:
-        raise Exception(f"Vidéo trop longue ({duration}s). Maximum: {max_duration}s pour votre plan.")
-
-    if duration == 0:
-        raise Exception("Impossible de déterminer la durée de la vidéo.")
-
-    # Format selon qualité
-    # 4K = 2160p, 1080p, 720p, 480p
-    quality_map = {"480": "480", "720": "720", "1080": "1080", "4K": "2160"}
-    max_height = quality_map.get(quality, "480")
-
-    # Télécharger
-    js_runtime = ["--js-runtimes", "node"] if shutil.which("node") else []
-    cmd = [
-        "yt-dlp"
-    ] + js_runtime + [
-        "-f", f"best[height<={max_height}][ext=mp4]/best[height<={max_height}]/best",
-        "--no-playlist",
-        "-o", str(out_path),
-        url
-    ]
-    proc = await asyncio.create_subprocess_exec(
-        *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await proc.communicate()
-
-    if proc.returncode != 0:
-        yt_error = stderr.decode()
-        raise Exception(f"Erreur téléchargement: {yt_error}")
-
-    # Extraire thumbnail
-    subprocess.run([
-        "ffmpeg", "-i", str(out_path), "-ss", "5", "-vframes", "1",
-        "-q:v", "2", str(thumb_path), "-y"
-    ], capture_output=True, timeout=15)
-
-    filesize = out_path.stat().st_size
-
-    return {"duration": duration, "filename": out_path.name, "filesize": filesize, "thumbnail": thumb_path.name}
-
-def cut_video(input_path: Path, start: float, end: float, cut_id: str) -> Path:
-    """Coupe une vidéo avec ffmpeg."""
-    out_path = CUTS / f"{cut_id}.mp4"
-    duration = end - start
-
-    cmd = [
-        "ffmpeg", "-ss", str(start), "-i", str(input_path),
-        "-t", str(duration), "-c:v", "libx264", "-c:a", "aac",
-        "-preset", "fast", "-crf", "23", "-y", str(out_path)
-    ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
-    if result.returncode != 0:
-        raise Exception(f"Erreur cut: {result.stderr}")
-    return out_path
-
-# ─── SEO files ────────────────────────────────────────────────────────────────
-
-@app.get("/robots.txt")
+            duration = 0
 async def robots_txt():
     return FileResponse(str(STATIC_DIR / "robots.txt"), media_type="text/plain")
 
@@ -4499,6 +4368,8 @@ async def api_video_info(
 @app.get("/api/videos/{video_id}/download")
 async def api_video_download_file(
     video_id: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_user),
     db: Session = Depends(get_db)
 ):
@@ -4507,7 +4378,23 @@ async def api_video_download_file(
         raise HTTPException(404, "Vidéo non trouvée")
     path = VIDEOS / video.filename
     if not path.exists():
-        raise HTTPException(404, "Fichier introuvable")
+        raise HTTPException(410, "Le fichier a déjà été effacé du serveur. Seul l'historique est conservé.")
+
+    def _cleanup():
+        try:
+            path.unlink(missing_ok=True)
+            if video.thumbnail:
+                (THUMBS / video.thumbnail).unlink(missing_ok=True)
+        except Exception:
+            pass
+        try:
+            video.status = "expired"
+            video.filename = ""
+            db.commit()
+        except Exception:
+            pass
+
+    background_tasks.add_task(_cleanup)
     return FileResponse(str(path), filename=f"{video.title or 'video'}.{path.suffix.lstrip('.')}")
 
 @app.delete("/api/videos/{video_id}")

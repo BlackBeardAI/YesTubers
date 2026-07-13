@@ -31,3 +31,6 @@ videos/
 # Logs / misc
 *.log
 celerybeat-schedule
+
+# Deploy keys
+.deploy-keys/
