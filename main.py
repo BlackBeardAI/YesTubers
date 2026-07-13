@@ -98,31 +98,44 @@ BASE_DIR = Path("/opt/ytcut")
 STORAGE = BASE_DIR / "storage"
 VIDEOS = STORAGE / "videos"
 CUTS = STORAGE / "cuts"
+# No local thumbnails are kept; only remote YouTube thumbnail URLs are stored in DB.
 THUMBS = STORAGE / "thumbnails"
+
+NODE_PATH = shutil.which("node") or "/usr/bin/node"
 
 DB_PATH = BASE_DIR / "yestubers.db"
 SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 
-# Stripe — à configurer via env
-STRIPE_PK = os.environ.get("STRIPE_PUBLIC_KEY", "pk_test_XXXXXXXXXXXXXXXX")
-STRIPE_SK = os.environ.get("STRIPE_SECRET_KEY", "sk_test_XXXXXXXXXXXXXXXX")
+# Stripe — optional. If keys are missing, the site runs in autonomous/free mode.
+STRIPE_PK = os.environ.get("STRIPE_PUBLIC_KEY", "")
+STRIPE_SK = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-# Fallback to .env if systemd does not load env (protects against missing live key)
-if not STRIPE_SK or STRIPE_SK.startswith("sk_test_X") or STRIPE_SK.startswith("sk_live_X") or STRIPE_SK.count("X") > 8:
+# Fallback to .env if systemd does not load env
+if not STRIPE_SK:
     try:
         _env_lines = Path('/opt/ytcut/.env').read_text().splitlines()
         _env = {k: v for k, v in (line.split('=', 1) for line in _env_lines if '=' in line and not line.startswith('#'))}
-        STRIPE_SK = _env.get('STRIPE_SECRET_KEY', STRIPE_SK)
-        STRIPE_PK = _env.get('STRIPE_PUBLIC_KEY', STRIPE_PK)
-        STRIPE_WEBHOOK = _env.get('STRIPE_WEBHOOK_SECRET', STRIPE_WEBHOOK)
-        for _env_key in _env:
-            if _env_key.startswith('STRIPE_') and _env_key not in os.environ:
-                os.environ[_env_key] = _env[_env_key]
+        STRIPE_SK = _env.get('STRIPE_SECRET_KEY', '')
+        STRIPE_PK = _env.get('STRIPE_PUBLIC_KEY', '')
+        STRIPE_WEBHOOK = _env.get('STRIPE_WEBHOOK_SECRET', '')
     except Exception:
         pass
-stripe.api_key = STRIPE_SK
 
-# Crédits par abonnement
+STRIPE_ENABLED = bool(STRIPE_SK and not STRIPE_SK.startswith("sk_") and len(STRIPE_SK) > 12)
+print(f"Stripe enabled: {STRIPE_ENABLED}")
+
+# Stripe python client is only loaded if enabled
+import importlib
+stripe = None
+if STRIPE_ENABLED:
+    try:
+        stripe = importlib.import_module("stripe")
+        stripe.api_key = STRIPE_SK
+    except Exception as e:
+        print(f"Stripe import failed: {e}")
+        stripe = None
+        STRIPE_ENABLED = False
+
 # billing: "monthly" ou "annual" — l'annuel est poussé par défaut (-33%)
 # Overridable Stripe Price IDs from env (monthly / annual)
 _STRIPE_PRICE_IDS = {
@@ -133,7 +146,7 @@ _STRIPE_PRICE_IDS = {
 
 def _resolve_stripe_price(pid: str) -> tuple[float, str]:
     """Return (amount_eur, interval) for a Stripe price id. Cache results."""
-    if not pid or not stripe.api_key:
+    if not pid or not stripe:
         return (0.0, "month")
     try:
         price = stripe.Price.retrieve(pid)
@@ -265,7 +278,9 @@ async def download_public(url: str, fmt: str, quality: str, max_duration: int = 
     if h > 360:
         max_height = "360"
     cmd = [
-        "yt-dlp", "--no-playlist", "-f",
+        "yt-dlp", "--no-playlist",
+        "--js-runtimes", f"node:{NODE_PATH}",
+        "-f",
         f"best[height<={max_height}][ext=mp4]/best[height<={max_height}]/best",
         "-o", str(base_path), url
     ]
@@ -314,22 +329,6 @@ async def download_public(url: str, fmt: str, quality: str, max_duration: int = 
     return {"video_id": vid_db, "title": info.get("title", "Sans titre"),
             "duration": duration, "filename": out_path.name, "filesize": filesize}
 
-
-def cleanup_old_files(hours: int = 24):
-    """Remove video and cut files older than N hours. Anonymous files are always temp."""
-    now = datetime.utcnow()
-    removed = 0
-    for folder in (VIDEOS, CUTS, THUMBS):
-        if not folder.exists():
-            continue
-        for p in folder.iterdir():
-            try:
-                if p.is_file() and (now - datetime.fromtimestamp(p.stat().st_mtime)) > timedelta(hours=hours):
-                    p.unlink()
-                    removed += 1
-            except Exception:
-                pass
-    return removed
 
 
 # ─── i18n / Multi-language (world SEO) ──────────────────────────────────────────
@@ -2256,7 +2255,7 @@ def send_verification_email(user: User, token: str) -> bool:
     verify_url = f"https://yestubers.cloud/verify-email?token={token}"
     body = f"""<p>Bonjour,</p>
 <p>Merci de rejoindre Yestubers. Confirmez votre adresse email en cliquant sur le lien ci-dessous :</p>
-<p><a href="{verify_url}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Vérifier mon email</a></p>
+<p><a href="{verify_url}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-radius:8px;text-decoration:none;font-weight:700;">Vérifier mon email</a></p>
 <p>Ou copiez ce lien : {verify_url}</p>
 <p>Ce lien expire dans 24 heures.</p>
 <p>Si vous n'êtes pas à l'origine de cette inscription, ignorez cet email.</p>
@@ -2303,7 +2302,7 @@ def is_valid_youtube_url(url: str) -> bool:
 def get_video_info(url: str) -> dict:
     """Récupère les infos de la vidéo sans la télécharger."""
     try:
-        js_runtime = ["--js-runtimes", "node"] if shutil.which("node") else []
+        js_runtime = ["--js-runtimes", f"node:{NODE_PATH}"] if Path(NODE_PATH).exists() else []
         result = subprocess.run(
             ["yt-dlp"] + js_runtime + ["--dump-json", "--no-playlist", url],
             capture_output=True, text=True, timeout=30
@@ -2316,27 +2315,136 @@ def get_video_info(url: str) -> dict:
     except Exception as e:
         raise Exception(f"Erreur: {str(e)}")
 
-async def download_video(url: str, video_id_db: str, max_duration: int = 60, quality: str = "480") -> dict:
-    """Télécharge une vidéo YouTube selon la qualité du plan."""
-    out_path = VIDEOS / f"{video_id_db}.mp4"
-    thumb_path = THUMBS / f"{video_id_db}.jpg"
+def cut_video(url_or_path: str, start: float, end: float, out_id: str, max_height: int = 720) -> Path:
+    """Découpe un segment vidéo. Accepte une URL YouTube ou un chemin local.
+    Le fichier source est retéléchargé si nécessaire, puis effacé après la découpe.
+    """
+    out_path = CUTS / f"{out_id}.mp4"
+    input_is_url = url_or_path.startswith("http://") or url_or_path.startswith("https://")
+    tmp_input = None
 
-    # D'abord vérifier la durée
+    try:
+        if input_is_url:
+            tmp_input = VIDEOS / f"_cut_src_{out_id}.mp4"
+            height_limit = max(144, max_height)
+            cmd = [
+                "yt-dlp", "--no-playlist",
+                "--js-runtimes", f"node:{NODE_PATH}",
+                "-f", f"best[height<={height_limit}][ext=mp4]/best[height<={height_limit}]/best",
+                "-o", str(tmp_input), url_or_path
+            ]
+            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            if proc.returncode != 0:
+                raise Exception(f"yt-dlp error: {proc.stderr[:300]}")
+            if not tmp_input.exists():
+                candidates = [p for p in VIDEOS.iterdir() if p.stem == f"_cut_src_{out_id}"]
+                if candidates:
+                    tmp_input = candidates[0]
+                else:
+                    raise Exception("Source non téléchargée")
+            src = str(tmp_input)
+        else:
+            src = str(Path(url_or_path))
+
+        duration = end - start
+        proc = subprocess.run(
+            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-ss", str(start),
+             "-t", str(duration), "-i", src, "-c", "copy", "-avoid_negative_ts", "make_zero",
+             str(out_path)],
+            capture_output=True, text=True, timeout=180
+        )
+        if proc.returncode != 0:
+            raise Exception(f"ffmpeg error: {proc.stderr[:300]}")
+        if tmp_input and tmp_input.exists():
+            tmp_input.unlink(missing_ok=True)
+        return out_path
+    except Exception:
+        if tmp_input and tmp_input.exists():
+            tmp_input.unlink(missing_ok=True)
+        raise
+
+
+async def download_video(url: str, video_id_db: str, max_duration: int = 60, quality: str = "480") -> dict:
+    """Télécharge une vidéo YouTube selon la qualité du plan. Aucun fichier n'est conservé sur le VPS."""
+    out_path = VIDEOS / f"{video_id_db}.mp4"
+
     try:
         info = get_video_info(url)
         duration = info.get("duration", 0) or 0
     except Exception:
-        info = None
+        info = {}
         duration = 0
-        # fallback: cannot determine duration if yt-dlp failed
-        vid_id = extract_video_id(url)
-        if vid_id:
-            duration = 0
+
+    if max_duration and duration > max_duration:
+        raise Exception(f"Durée limitée à {max_duration}s avec votre plan.")
+
+    quality_map = {"sd": "360", "hd": "720", "fullhd": "1080", "2k": "1440", "4k": "2160"}
+    target = quality_map.get(quality, quality)
+    try:
+        h = int(target)
+    except ValueError:
+        h = 480
+    height_limit = max(h, 144)
+
+    cmd = [
+        "yt-dlp", "--no-playlist",
+        "--js-runtimes", f"node:{NODE_PATH}",
+        "-f", f"best[height<={height_limit}][ext=mp4]/best[height<={height_limit}]/best",
+        "-o", str(VIDEOS / f"{video_id_db}"), url
+    ]
+    proc = await asyncio.create_subprocess_exec(*cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+    stdout, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        raise Exception(f"yt-dlp error: {stderr.decode()[:300]}")
+
+    if not out_path.exists():
+        candidates = [p for p in VIDEOS.iterdir() if p.stem == video_id_db]
+        if candidates:
+            out_path = candidates[0]
+    if not out_path.exists():
+        raise Exception("Le téléchargement a échoué (fichier non créé).")
+
+    filesize = out_path.stat().st_size if out_path.exists() else 0
+    return {
+        "title": info.get("title", "Sans titre"),
+        "duration": duration,
+        "filename": out_path.name,
+        "filesize": filesize,
+        "thumbnail": info.get("thumbnail"),
+    }
+
+
+def _delete_file_soon(paths: list):
+    """Helper for BackgroundTasks: silently remove generated files from VPS."""
+    for p in paths:
+        try:
+            Path(p).unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
+def cleanup_old_files(hours: int = 24):
+    """Remove leftover video/cut files (defensive). History stays in DB."""
+    now = datetime.utcnow()
+    removed = 0
+    for folder in (VIDEOS, CUTS):
+        if not folder.exists():
+            continue
+        for p in folder.iterdir():
+            try:
+                if p.is_file() and (now - datetime.fromtimestamp(p.stat().st_mtime)) > timedelta(hours=hours):
+                    p.unlink()
+                    removed += 1
+            except Exception:
+                pass
+    return removed
+
+
+@app.get("/robots.txt")
 async def robots_txt():
     return FileResponse(str(STATIC_DIR / "robots.txt"), media_type="text/plain")
 
 def _build_sitemap() -> str:
-    """Generate a fresh sitemap.xml including all SEO landing pages."""
     base = "https://yestubers.cloud"
     locales = ["fr", "en", "es", "de", "it", "pt", "nl", "pl", "ar", "hi", "ja", "ko", "zh", "ru", "tr"]
     static_pages = ["pricing", "about", "contact", "terms", "privacy", "dmca"]
@@ -2390,14 +2498,20 @@ async def favicon_root():
     return FileResponse(str(STATIC_DIR / "favicon.ico"), media_type="image/vnd.microsoft.icon")
 
 
-# ─── IndexNow ─────────────────────────────────────────────────────────────────
+# ─── IndexNow (disabled when no SEO API key is configured) ─────────────────────
+
+INDEXNOW_ENABLED = bool(os.environ.get("INDEXNOW_KEY", "").strip())
 
 @app.get("/78CqOblo3fZYJJIdLYGN4WfnuHgLiFCW.txt")
 async def indexnow_key():
+    if not INDEXNOW_ENABLED:
+        raise HTTPException(404, "Not configured")
     return PlainTextResponse("78CqOblo3fZYJJIdLYGN4WfnuHgLiFCW")
 
 @app.post("/api/indexnow/submit")
 async def indexnow_submit(urls: list[str] = Form(...)):
+    if not INDEXNOW_ENABLED:
+        return {"ok": False, "message": "IndexNow non configuré en mode autonome."}
     import httpx
     payload = {"host": "yestubers.cloud", "key": "78CqOblo3fZYJJIdLYGN4WfnuHgLiFCW", "keyLocation": f"https://yestubers.cloud/78CqOblo3fZYJJIdLYGN4WfnuHgLiFCW.txt", "urlList": urls}
     async with httpx.AsyncClient() as client:
@@ -2435,7 +2549,7 @@ async def pricing(request: Request, db: Session = Depends(get_db)):
     user = get_user_from_session(request, db)
     i18n = translate_dict(request)
     return HTMLResponse(_jinja_env.get_template("pricing.html").render(
-        request=request, user=user, stripe_pk=STRIPE_PK, i18n=i18n, locale=i18n["_locale"],
+        request=request, user=user, stripe_pk=STRIPE_PK, stripe_enabled=STRIPE_ENABLED, i18n=i18n, locale=i18n["_locale"],
         plans=PLANS,
     ))
 
@@ -4244,11 +4358,15 @@ async def api_public_download(
         raise HTTPException(400, str(e))
 
 @app.get("/api/download/{video_id}/file")
-async def api_public_download_file(video_id: str):
+async def api_public_download_file(
+    video_id: str,
+    background_tasks: BackgroundTasks,
+):
     candidates = [p for p in VIDEOS.iterdir() if p.stem == video_id]
     if not candidates:
         raise HTTPException(404, "Fichier expiré ou introuvable")
     path = candidates[0]
+    background_tasks.add_task(_delete_file_soon, [str(path)])
     return FileResponse(str(path), filename=path.name, media_type="application/octet-stream")
 
 # ─── API Videos ───────────────────────────────────────────────────────────────
@@ -4380,13 +4498,10 @@ async def api_video_download_file(
     if not path.exists():
         raise HTTPException(410, "Le fichier a déjà été effacé du serveur. Seul l'historique est conservé.")
 
+    files_to_delete = [str(path)]
+
     def _cleanup():
-        try:
-            path.unlink(missing_ok=True)
-            if video.thumbnail:
-                (THUMBS / video.thumbnail).unlink(missing_ok=True)
-        except Exception:
-            pass
+        _delete_file_soon(files_to_delete)
         try:
             video.status = "expired"
             video.filename = ""
@@ -4395,7 +4510,8 @@ async def api_video_download_file(
             pass
 
     background_tasks.add_task(_cleanup)
-    return FileResponse(str(path), filename=f"{video.title or 'video'}.{path.suffix.lstrip('.')}")
+    ext = path.suffix.lstrip('.') or "mp4"
+    return FileResponse(str(path), filename=f"{video.title or 'video'}.{ext}")
 
 @app.delete("/api/videos/{video_id}")
 async def api_video_delete(
@@ -4407,8 +4523,6 @@ async def api_video_delete(
     if not video:
         raise HTTPException(404)
     (VIDEOS / video.filename).unlink(missing_ok=True)
-    if video.thumbnail:
-        (THUMBS / video.thumbnail).unlink(missing_ok=True)
     db.delete(video)
     db.commit()
     return {"ok": True}
@@ -4460,6 +4574,7 @@ async def api_cut_create(
 @app.get("/api/cuts/{cut_id}/download")
 async def api_cut_download(
     cut_id: str,
+    background_tasks: BackgroundTasks,
     user: User = Depends(require_user),
     db: Session = Depends(get_db)
 ):
@@ -4468,7 +4583,8 @@ async def api_cut_download(
         raise HTTPException(404)
     path = CUTS / cut.filename
     if not path.exists():
-        raise HTTPException(404)
+        raise HTTPException(410, "Le fichier a déjà été effacé du serveur. Seul l'historique est conservé.")
+    background_tasks.add_task(_delete_file_soon, [str(path)])
     return FileResponse(str(path), filename=f"cut_{cut_id[:8]}.mp4")
 
 @app.delete("/api/cuts/{cut_id}")
@@ -4500,6 +4616,13 @@ async def stripe_checkout(
         raise HTTPException(400, "Plan invalide")
     if billing not in ("monthly", "annual"):
         raise HTTPException(400, "Billing invalide")
+
+    if not STRIPE_ENABLED:
+        # Autonomous/free mode: immediately upgrade the user without payment
+        user.plan = plan
+        user.credits = PLANS[plan]["credits"]
+        db.commit()
+        return {"ok": True, "mode": "autonomous", "message": f"Mode autonome : plan {plan} activé. {PLANS[plan]['credits']} crédits attribués.", "redirect_url": "/dashboard"}
 
     plan_data = PLANS[plan]
     price_field = "stripe_annual_price_id" if billing == "annual" else "stripe_price_id"
@@ -4555,6 +4678,8 @@ async def stripe_checkout(
 @app.post("/api/stripe/webhook")
 async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
     check_rate_limit(request, "default")
+    if not STRIPE_ENABLED:
+        raise HTTPException(503, "Stripe n'est pas configuré.")
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
 
@@ -4705,7 +4830,6 @@ async def api_test_video(
 
     video_id_db = str(uuid.uuid4())
     out_path = VIDEOS / f"{video_id_db}.mp4"
-    thumb_path = THUMBS / f"{video_id_db}.jpg"
 
     try:
         import httpx
@@ -4716,8 +4840,6 @@ async def api_test_video(
     except Exception as e:
         raise HTTPException(503, f"Impossible de télécharger la vidéo de test : {str(e)[:120]}")
 
-    # Generate thumbnail and get duration
-    subprocess.run(["ffmpeg", "-i", str(out_path), "-ss", "1", "-vframes", "1", "-q:v", "2", str(thumb_path), "-y"], capture_output=True, timeout=15)
     ffprobe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", str(out_path)], capture_output=True, text=True, timeout=15)
     try:
         duration = float(ffprobe.stdout.strip())
@@ -4734,7 +4856,6 @@ async def api_test_video(
         duration=duration,
         filesize=filesize,
         filename=f"{video_id_db}.mp4",
-        thumbnail=f"{video_id_db}.jpg",
         status="done",
     )
     db.add(video)
@@ -4789,6 +4910,8 @@ async def api_user_regenerate_key(
 async def api_stripe_portal(
     user: User = Depends(require_user),
 ):
+    if not STRIPE_ENABLED:
+        raise HTTPException(503, "Stripe n'est pas configuré.")
     if not user.stripe_customer_id:
         raise HTTPException(400, "Aucun abonnement Stripe trouvé")
     try:
@@ -4812,8 +4935,6 @@ async def api_user_delete(
         db.delete(cut)
     for video in db.query(Video).filter(Video.user_id == user.id).all():
         (VIDEOS / video.filename).unlink(missing_ok=True)
-        if video.thumbnail:
-            (THUMBS / video.thumbnail).unlink(missing_ok=True)
         db.delete(video)
     db.delete(user)
     db.commit()
@@ -4823,10 +4944,8 @@ async def api_user_delete(
 
 @app.get("/api/thumbnails/{filename}")
 async def api_thumbnail(filename: str):
-    path = THUMBS / filename
-    if not path.exists():
-        raise HTTPException(404, "Thumbnail introuvable")
-    return FileResponse(str(path), media_type="image/jpeg")
+    # Thumbnails are no longer stored locally; return 410 with a redirect suggestion
+    raise HTTPException(410, "Les vignettes ne sont plus stockées localement. Utilisez l'URL distante.")
 
 # ─── 404 Handler ──────────────────────────────────────────────────────────────
 

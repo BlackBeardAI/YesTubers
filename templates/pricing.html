@@ -68,6 +68,8 @@
                 <button class="btn-plan current" disabled>{{ i18n.current_plan_btn }}</button>
                 {% elif key == 'free' %}
                 <a href="{{ "/dashboard" if user else "/signup?next=/pricing" }}" id="free-plan-link" class="btn-plan secondary">{{ "Mon compte" if user else "Commencer gratuitement" }}</a>
+                {% elif not stripe_enabled %}
+                <button class="btn-plan primary checkout-btn" data-plan="{{ key }}">Activer {{ plan.name }}</button>
                 {% else %}
                 <button class="btn-plan primary checkout-btn" data-plan="{{ key }}">Choisir {{ plan.name }}</button>
                 {% endif %}
@@ -225,6 +227,7 @@
 <script>
     const isAuthenticated = {{ "true" if user else "false" }};
     const stripePublishableKey = "{{ stripe_pk }}";
+    const stripeEnabled = {{ "true" if stripe_enabled else "false" }};
 
     function switchBilling(billing) {
         const isAnnual = billing === 'annual';
@@ -276,7 +279,7 @@
             const billing = document.getElementById('btn-annual').classList.contains('active') ? 'annual' : 'monthly';
             const originalText = this.textContent;
             this.disabled = true;
-            this.textContent = 'Redirection...';
+            this.textContent = 'Activation...';
             try {
                 const form = new FormData();
                 form.append('plan', plan);
@@ -286,7 +289,10 @@
                     body: form
                 });
                 const data = await res.json();
-                if (res.ok && data.url) {
+                if (res.ok && data.mode === 'autonomous') {
+                    alert(data.message || 'Plan activé en mode autonome.');
+                    window.location.href = data.redirect_url || '/dashboard';
+                } else if (res.ok && data.url) {
                     window.location.href = data.url;
                 } else {
                     alert(data.detail || data.error || 'Erreur de paiement. Vérifiez vos informations.');

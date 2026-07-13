@@ -1,18 +1,18 @@
 #!/opt/ytcut/venv/bin/python3
-"""Standalone cleanup script for cron."""
+"""Standalone cleanup script for cron. Removes leftover videos/cuts only. History stays in DB."""
 import os, sys
 sys.path.insert(0, '/opt/ytcut')
 from datetime import datetime, timedelta
 from pathlib import Path
 
-VIDEOS = Path('/opt/ytcut/videos')
-CUTS = Path('/opt/ytcut/cuts')
-THUMBS = Path('/opt/ytcut/thumbs')
+STORAGE = Path('/opt/ytcut/storage')
+VIDEOS = STORAGE / 'videos'
+CUTS = STORAGE / 'cuts'
 HOURS = int(os.environ.get('CLEANUP_HOURS', '24'))
 
 now = datetime.utcnow()
 removed = 0
-for folder in (VIDEOS, CUTS, THUMBS):
+for folder in (VIDEOS, CUTS):
     if not folder.exists():
         continue
     for p in folder.iterdir():
