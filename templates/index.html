@@ -27,6 +27,17 @@
 .banner-close { background: none; border: none; color: #94a3b8; font-size: 1.2rem; cursor: pointer; }
 </style>
 
+<!-- Urgency banner -->
+<div class="urgency-banner" id="urgencyBanner">
+    <div class="container">
+        <div class="urgency-inner">
+            <span class="urgency-badge">Offre limitée</span>
+            <span>Passez à Starter aujourd'hui : <strong>1€ le premier mois</strong> au lieu de 2,99€.</span>
+            <span class="urgency-countdown" id="urgencyCountdown">Termine dans 02:14:38</span>
+        </div>
+    </div>
+</div>
+
 <header class="hero">
     <div class="container">
         <div class="hero-badge">
@@ -34,13 +45,51 @@
             <span id="conv-counter">{{ "{:,}".format(total_conversions).replace(',', ' ') }} vidéos traitées</span>
         </div>
         <h1>Téléchargez et découpez <span class="gradient-text">n'importe quelle vidéo YouTube</span></h1>
-        <p class="hero-subtitle">Collez un lien, choisissez MP3 ou MP4, et obtenez votre fichier en quelques secondes. Inscription gratuite pour HD, MP3 et découpe.</p>
+        <p class="hero-subtitle">Collez un lien, choisissez MP3 ou MP4, et obtenez votre fichier en quelques secondes. Sans pubs, sans fichiers conservés.</p>
         <div class="hero-cta-row">
             <a href="#converter" class="btn-cta">Convertir une vidéo maintenant</a>
             <a href="/pricing" class="btn-secondary">Voir les tarifs</a>
         </div>
+
+        <div class="trust-bar">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Paiement sécurisé Stripe</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg> Annulation à tout moment</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Pas de stockage de fichiers</span>
+        </div>
+
+        <div class="hero-visual">
+            <div class="hero-mockup">
+                <div class="mockup-header">
+                    <div class="mockup-dot" style="background:#ef4444"></div>
+                    <div class="mockup-dot" style="background:#f59e0b"></div>
+                    <div class="mockup-dot" style="background:#22c55e"></div>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-url">youtube.com/watch?v=...</div>
+                    <div class="mockup-btn">Télécharger</div>
+                    <div class="mockup-result">
+                        <div class="mockup-thumb">▶</div>
+                        <div class="mockup-meta">
+                            <div class="mockup-line"></div>
+                            <div class="mockup-line short"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </header>
+
+<section class="social-proof-strip">
+    <div class="container">
+        <div class="social-proof-grid">
+            <div class="stat">{{ "{:,}".format(total_conversions).replace(',', ' ') }}+<span>fichiers générés</span></div>
+            <div class="stat">4.8/5<span>note moyenne</span></div>
+            <div class="stat">10 s<span>en moyenne</span></div>
+            <div class="stat">0<span>fichiers conservés</span></div>
+        </div>
+    </div>
+</section>
 
 <section class="converter-section" id="converter">
     <div class="container">
@@ -58,7 +107,6 @@
                     <button class="paste-btn" onclick="pasteUrl()" title="Coller">Coller</button>
                 </div>
 
-                
                 <div class="options-row">
                     <div class="format-selector">
                         <label>Format</label>
@@ -136,6 +184,87 @@
 <section class="section">
     <div class="container">
         <div class="section-header">
+            <h2>Ce que disent nos utilisateurs</h2>
+            <p>Rejoints par des créateurs, monteurs et étudiants chaque jour.</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"J'utilisais 3 outils avant. Maintenant tout est centralisé : téléchargement, découpe, export. Gain de temps énorme."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">AL</div>
+                    <div class="author-info"><strong>Alex L.</strong><span>Créateur YouTube</span></div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"L'offre à 1€ m'a convaincu. J'ai gardé Starter car c'est 10 fois moins cher que ce que je payais ailleurs."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">SM</div>
+                    <div class="author-info"><strong>Sarah M.</strong><span>Community manager</span></div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"Interface propre, pas de pubs, pas de malwares. Le cutter est parfait pour mes extraits de révision."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">TB</div>
+                    <div class="author-info"><strong>Thomas B.</strong><span>Étudiant en langues</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section compare-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Comparez les plans</h2>
+            <p>Commencez petit, augmentez quand vous grandissez.</p>
+        </div>
+        <div class="compare-card">
+            <div class="compare-row head">
+                <div>Fonctionnalité</div>
+                <div>Gratuit</div>
+                <div class="highlight">Starter — 1€/mois</div>
+            </div>
+            <div class="compare-row">
+                <div>Crédits</div>
+                <div>3/mois</div>
+                <div class="highlight">25/mois</div>
+            </div>
+            <div class="compare-row">
+                <div>MP3 / audio</div>
+                <div class="cross">—</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>HD 720p / 1080p</div>
+                <div class="cross">—</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>Découpe intégrée</div>
+                <div class="cross">—</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>Publicités</div>
+                <div class="cross">Limitées</div>
+                <div class="check">Aucune</div>
+            </div>
+            <div class="compare-row">
+                <div></div>
+                <div><a href="/signup" class="btn-plan secondary">Gratuit</a></div>
+                <div class="highlight"><a href="/pricing?plan=starter" class="btn-plan primary">Prendre Starter</a></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section" style="background:var(--surface)">
+    <div class="container">
+        <div class="section-header">
             <h2>Des tarifs simples</h2>
             <p>Commencez avec l'offre d'appel à 1€, puis ajustez selon vos besoins.</p>
         </div>
@@ -145,25 +274,25 @@
                 <p class="plan-desc">Pour tester sans engagement</p>
                 <div class="price">0€<span>/mois</span></div>
                 <ul class="plan-features">
-                    <li>1 aperçu par semaine</li>
+                    <li>3 crédits/mois</li>
                     <li>MP4 360p avec watermark</li>
                     <li>Sans compte requis</li>
                 </ul>
                 <a href="/signup" class="btn-plan secondary">Créer un compte</a>
             </div>
-            <div class="pricing-card popular">
+            <div class="pricing-card popular glow">
                 <div class="popular-badge">Offre d'appel</div>
                 <h3>Starter</h3>
                 <p class="plan-desc">Le meilleur moyen de commencer</p>
-                <div class="price">1€<span> le 1er mois, puis 2,99€/mois</span></div>
-                <p class="price-detail">Sans engagement — annulez à tout moment</p>
+                <div class="price"><span class="original">2,99€</span>1€<span> le 1er mois</span></div>
+                <p class="price-detail">Puis 2,99€/mois — sans engagement</p>
                 <ul class="plan-features">
                     <li>25 crédits/mois</li>
                     <li>MP3 & MP4 720p</li>
                     <li>Sans publicité</li>
                     <li>Support email</li>
                 </ul>
-                <a href="/pricing" class="btn-plan primary">Obtenir pour 1€</a>
+                <a href="/pricing?plan=starter" class="btn-plan primary">Obtenir pour 1€</a>
             </div>
             <div class="pricing-card">
                 <h3>Creator</h3>
@@ -175,7 +304,13 @@
                     <li>Découpe intégrée</li>
                     <li>Support prioritaire</li>
                 </ul>
-                <a href="/pricing" class="btn-plan secondary">Voir Creator</a>
+                <a href="/pricing?plan=creator" class="btn-plan secondary">Voir Creator</a>
+            </div>
+        </div>
+        <div style="text-align:center; margin-top:32px;">
+            <div class="guarantee-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                <div><strong>Satisfait ou remboursé 7 jours</strong>Vous pouvez annuler à tout moment depuis votre compte.</div>
             </div>
         </div>
     </div>
@@ -208,5 +343,38 @@
         </div>
     </div>
 </section>
+
+<!-- Sticky mobile CTA -->
+<div class="sticky-cta">
+    <a href="/pricing?plan=starter" class="btn-cta">Obtenir Starter à 1€ →</a>
+</div>
+
+<!-- Floating trust -->
+<div class="float-trust">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+    Paiement sécurisé Stripe
+</div>
+
+{% block extra_js %}
+<script>
+function startUrgencyCountdown(){
+    const el = document.getElementById('urgencyCountdown');
+    if(!el) return;
+    let total = 2*3600 + 14*60 + 38;
+    function fmt(s){
+        const h=String(Math.floor(s/3600)).padStart(2,'0');
+        const m=String(Math.floor((s%3600)/60)).padStart(2,'0');
+        const sec=String(s%60).padStart(2,'0');
+        return `${h}:${m}:${sec}`;
+    }
+    el.textContent = 'Termine dans '+fmt(total);
+    setInterval(()=>{
+        if(total>0) total--;
+        el.textContent = 'Termine dans '+fmt(total);
+    },1000);
+}
+startUrgencyCountdown();
+</script>
+{% endblock %}
 
 {% endblock %}

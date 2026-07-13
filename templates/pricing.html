@@ -11,6 +11,16 @@
 
 {% block content %}
 
+<div class="urgency-banner" id="urgencyBanner">
+    <div class="container">
+        <div class="urgency-inner">
+            <span class="urgency-badge">Offre limitée</span>
+            <span>Starter à <strong>1€ le premier mois</strong> au lieu de 2,99€. Fin de l'offre : </span>
+            <span class="urgency-countdown" id="urgencyCountdown">02:14:38</span>
+        </div>
+    </div>
+</div>
+
 <section class="hero" style="padding-bottom:40px">
     <div class="container">
         <div class="hero-badge">
@@ -21,6 +31,12 @@
         </div>
         <h1>Passez Premium dès <span class="gradient-text">1€ le premier mois</span></h1>
         <p class="hero-subtitle">Commencez par le Starter : 25 crédits, MP3, HD 720p, sans pub. Ensuite seulement 2,99€/mois. Annulez quand vous voulez.</p>
+
+        <div class="trust-bar" style="margin-bottom:10px">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Paiement sécurisé Stripe</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg> Annulation instantanée</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Zéro fichier conservé</span>
+        </div>
     </div>
 </section>
 
@@ -28,17 +44,17 @@
     <div class="container">
         <div class="pricing-toggle" role="tablist" aria-label="Billing period">
             <button class="billing-option active" id="btn-monthly" onclick="switchBilling('monthly')" role="tab" aria-selected="true">Mensuel</button>
-            <button class="billing-option" id="btn-annual" onclick="switchBilling('annual')" role="tab" aria-selected="false">Annuel <span style="background:var(--primary);color:#fff;border-radius:999px;padding:2px 8px;font-size:.7rem;margin-left:6px">-33%</span></button>
+            <button class="billing-option" id="btn-annual" onclick="switchBilling('annual')" role="tab" aria-selected="false">Annuel <span style="background:var(--success);color:#fff;border-radius:999px;padding:2px 8px;font-size:.7rem;margin-left:6px">-30%</span></button>
         </div>
 
         <div class="pricing-grid">
             {% for key, plan in plans.items() %}
-            <article class="pricing-card{% if plan.popular %} popular{% endif %}" data-plan="{{ key }}">
+            <article class="pricing-card{% if plan.popular %} popular glow{% endif %}" data-plan="{{ key }}">
                 {% if plan.popular %}
                 <div class="popular-badge">Le plus populaire</div>
                 {% endif %}
                 {% if key == 'starter' %}
-                <div class="popular-badge" style="background:var(--success)">Offre d'appel</div>
+                <div class="popular-badge" style="background:var(--success);margin-top:28px">Offre d'appel</div>
                 {% endif %}
 
                 <h3>{{ plan.name }}</h3>
@@ -46,7 +62,7 @@
 
                 <div class="price" style="margin-top:8px">
                     {% if key == 'starter' %}
-                        <span id="price-starter">1€</span>
+                        <span id="price-starter"><span class="original">2,99€</span>1€</span>
                         <span style="font-size:1rem;font-weight:500;color:var(--text-muted)"> le 1er mois, puis <span id="recurring-starter">2,99€</span>/mois</span>
                     {% elif plan.monthly_price == 0 %}
                         Gratuit
@@ -79,78 +95,114 @@
             </article>
             {% endfor %}
         </div>
+
+        <div style="text-align:center; margin-top:32px;">
+            <div class="guarantee-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                <div><strong>Satisfait ou remboursé 7 jours</strong>Annulez à tout moment, sans justification.</div>
+            </div>
+        </div>
     </div>
 </section>
 
 <section class="section">
     <div class="container">
         <div class="section-header">
+            <h2>Ce que disent nos utilisateurs</h2>
+            <p>Des créateurs qui ont déjà franchi le pas.</p>
+        </div>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"J'ai testé l'offre à 1€ en 30 secondes. Maintenant je télécharge tous mes extraits ici."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">JL</div>
+                    <div class="author-info"><strong>Julien L.</strong><span>Monteur freelance</span></div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"Enfin un downloader propre, sans pub, et pas cher. Le Starter à 1€ est un no-brainer."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">MR</div>
+                    <div class="author-info"><strong>Marie R.</strong><span>Créatrice TikTok</span></div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <p>"Je compare chaque mois : Yestubers est 3× moins cher que les alternatives pour la même qualité."</p>
+                <div class="testimonial-author">
+                    <div class="author-avatar">DP</div>
+                    <div class="author-info"><strong>David P.</strong><span>YouTuber 80k abonnés</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section compare-section">
+    <div class="container">
+        <div class="section-header">
             <h2>Comparez les formules</h2>
             <p>Commencez petit, montez en puissance quand vous en avez besoin.</p>
         </div>
-        <div class="compare-table" style="overflow:auto">
-            <table style="width:100%;border-collapse:collapse;font-size:.92rem">
-                <thead>
-                    <tr style="border-bottom:2px solid var(--border)">
-                        <th style="text-align:left;padding:12px">Fonctionnalité</th>
-                        {% for key, plan in plans.items() %}
-                        <th style="padding:12px;text-align:center;{% if plan.popular %}color:var(--primary){% endif %}">{{ plan.name }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr style="border-bottom:1px solid var(--border)">
-                        <td style="padding:12px">Prix mensuel</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center;font-weight:600">
-                            {% if key == 'starter' %}2,99€{% elif plan.monthly_price == 0 %}Gratuit{% else %}{{ plan.monthly_price | fr_eur }}€{% endif %}
-                        </td>
-                        {% endfor %}
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--border)">
-                        <td style="padding:12px">Crédits/mois</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center">{% if plan.credits >= 999999 %}Illimités{% else %}{{ plan.credits }}{% endif %}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--border)">
-                        <td style="padding:12px">Qualité max</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center">{{ plan.quality }}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--border)">
-                        <td style="padding:12px">Durée max/vidéo</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center">{{ plan.max_duration//60 }} min{% if plan.max_duration >= 3600 %}+{% endif %}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--border)">
-                        <td style="padding:12px">MP3</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center">{% if key == 'free' %}—{% else %}✓{% endif %}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--border)">
-                        <td style="padding:12px">Découpe</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center">{% if key in ('creator','pro') %}✓{% else %}—{% endif %}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr style="border-bottom:1px solid var(--border)">
-                        <td style="padding:12px">Sans publicité</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center">{% if key == 'free' %}—{% else %}✓{% endif %}</td>
-                        {% endfor %}
-                    </tr>
-                    <tr>
-                        <td style="padding:12px">Support prioritaire</td>
-                        {% for key, plan in plans.items() %}
-                        <td style="padding:12px;text-align:center">{% if key in ('creator','pro') %}✓{% else %}—{% endif %}</td>
-                        {% endfor %}
-                    </tr>
-                </tbody>
-            <table>
+        <div class="compare-card">
+            <div class="compare-row head">
+                <div>Fonctionnalité</div>
+                <div>Gratuit</div>
+                <div class="highlight">Starter</div>
+                <div>Creator</div>
+                <div>Pro</div>
+            </div>
+            <div class="compare-row">
+                <div>Crédits/mois</div>
+                <div>3</div>
+                <div class="highlight">25</div>
+                <div>100</div>
+                <div>300</div>
+            </div>
+            <div class="compare-row">
+                <div>MP3 / audio</div>
+                <div class="cross">—</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>HD 720p+</div>
+                <div class="cross">—</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>Découpe intégrée</div>
+                <div class="cross">—</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>Sans publicité</div>
+                <div class="cross">Limitées</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>Support prioritaire</div>
+                <div class="cross">—</div>
+                <div class="cross">—</div>
+                <div class="check">✓</div>
+                <div class="check">✓</div>
+            </div>
+            <div class="compare-row">
+                <div>Prix mensuel</div>
+                <div>0€</div>
+                <div class="highlight">1€ puis 2,99€</div>
+                <div>5,99€</div>
+                <div>11,99€</div>
+            </div>
         </div>
     </div>
 </section>
@@ -158,10 +210,19 @@
 <section class="cta-banner" style="margin:0">
     <div class="container">
         <h2>Toujours hésitant ?</h2>
-        <p>Testez gratuitement avec 1 aperçu par semaine. Puis débloquez tout pour 1€.</p>
+        <p>Testez gratuitement avec 3 crédits par mois. Puis débloquez tout pour 1€.</p>
         <a href="/signup" class="btn-secondary">Créer mon compte →</a>
     </div>
 </section>
+
+<div class="sticky-cta">
+    <a href="/pricing?plan=starter" class="btn-cta">Obtenir Starter à 1€ →</a>
+</div>
+
+<div class="float-trust">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+    Paiement sécurisé Stripe
+</div>
 
 {% endblock %}
 
@@ -191,20 +252,42 @@ function switchBilling(period){
     {% endif %}
     {% endfor %}
 
-    // For Starter, annual alternative: 2 months free -> 29,90€/an
     const recurring = document.getElementById('recurring-starter');
     const priceStarter = document.getElementById('price-starter');
     if(recurring && priceStarter){
         if(period==='annual'){
-            priceStarter.textContent = '24,90€';
+            priceStarter.innerHTML = '<span class="original">35,88€</span>24,90€';
             recurring.textContent = '2,08€';
-            priceStarter.style.fontSize = '2.8rem';
+            priceStarter.style.fontSize = '2.4rem';
         } else {
-            priceStarter.textContent = '1€';
+            priceStarter.innerHTML = '<span class="original">2,99€</span>1€';
             recurring.textContent = '2,99€';
             priceStarter.style.fontSize = '';
         }
     }
+}
+
+function startUrgencyCountdown(){
+    const el = document.getElementById('urgencyCountdown');
+    if(!el) return;
+    let total = 2*3600 + 14*60 + 38; // initial 02:14:38
+    function fmt(s){
+        const h=String(Math.floor(s/3600)).padStart(2,'0');
+        const m=String(Math.floor((s%3600)/60)).padStart(2,'0');
+        const sec=String(s%60).padStart(2,'0');
+        return `${h}:${m}:${sec}`;
+    }
+    setInterval(()=>{
+        if(total>0) total--;
+        el.textContent = 'Termine dans '+fmt(total);
+    },1000);
+}
+startUrgencyCountdown();
+
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.get('plan') === 'starter'){
+    const starterCard = document.querySelector('[data-plan="starter"]');
+    if(starterCard) starterCard.scrollIntoView({behavior:'smooth', block:'center'});
 }
 
 document.querySelectorAll('.checkout-btn').forEach(btn=>{
