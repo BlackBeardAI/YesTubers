@@ -28,12 +28,12 @@
 </style>
 
 <!-- Urgency banner -->
-<div class="urgency-banner" id="urgencyBanner">
+<div class="urgency-banner" id="urgencyBanner" data-expires="{{ offer_expires }}">
     <div class="container">
         <div class="urgency-inner">
             <span class="urgency-badge">Offre limitée</span>
             <span>Passez à Starter aujourd'hui : <strong>1€ le premier mois</strong> au lieu de 2,99€.</span>
-            <span class="urgency-countdown" id="urgencyCountdown">Termine dans 02:14:38</span>
+            <span class="urgency-countdown" id="urgencyCountdown"></span>
         </div>
     </div>
 </div>
@@ -321,6 +321,17 @@
         <h2>Prêt à gagner du temps ?</h2>
         <p>Rejoignez les créateurs qui utilisent Yestubers chaque jour.</p>
         <a href="/signup" class="btn-secondary">Créer mon compte gratuit →</a>
+        <div class="trust-logos" style="margin-top:26px">
+            <span class="trust-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Paiement 100% sécurisé</span>
+            <span class="trust-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> SSL 256 bits</span>
+            <span class="trust-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg> Garantie 7 jours</span>
+        </div>
+        <div class="card-icons">
+            <span class="card-icon">VISA</span>
+            <span class="card-icon">MASTERCARD</span>
+            <span class="card-icon">AMEX</span>
+            <span class="card-icon">Stripe</span>
+        </div>
     </div>
 </section>
 
@@ -359,19 +370,28 @@
 <script>
 function startUrgencyCountdown(){
     const el = document.getElementById('urgencyCountdown');
-    if(!el) return;
-    let total = 2*3600 + 14*60 + 38;
-    function fmt(s){
-        const h=String(Math.floor(s/3600)).padStart(2,'0');
-        const m=String(Math.floor((s%3600)/60)).padStart(2,'0');
-        const sec=String(s%60).padStart(2,'0');
-        return `${h}:${m}:${sec}`;
+    const banner = document.getElementById('urgencyBanner');
+    if(!el || !banner) return;
+    let expires = parseInt(banner.dataset.expires || '0', 10) * 1000;
+    if(!expires){
+        // fallback: end of day Paris
+        const d = new Date();
+        expires = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()+1, 21, 59, 59);
     }
-    el.textContent = 'Termine dans '+fmt(total);
-    setInterval(()=>{
-        if(total>0) total--;
-        el.textContent = 'Termine dans '+fmt(total);
-    },1000);
+    function fmt(diff){
+        if(diff <= 0) return "L'offre expire bientôt";
+        const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+        const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+        const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+        return `Termine dans ${h}:${m}:${s}`;
+    }
+    function tick(){
+        const diff = expires - Date.now();
+        el.textContent = fmt(diff);
+        if(diff <= 0) clearInterval(timer);
+    }
+    tick();
+    const timer = setInterval(tick, 1000);
 }
 startUrgencyCountdown();
 </script>

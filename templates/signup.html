@@ -22,8 +22,9 @@
             </div>
             <form id="signup-form">
                 <input type="hidden" name="ref" id="ref-field" value="" />
+                {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}"/>{% endif %}
                 <label>Email</label>
-                <input type="email" name="email" required placeholder="vous@email.com" />
+                <input type="email" name="email" required placeholder="vous@email.com" value="{{ email }}" />
                 <label>Mot de passe</label>
                 <input type="password" name="password" required minlength="8" placeholder="8 caractères minimum" />
                 <div id="signup-status" class="status-msg"></div>
@@ -54,8 +55,7 @@
                 status.textContent = '✅ Compte créé. Vérifiez votre email pour débloquer toutes les fonctionnalités.';
                 status.className = 'status-msg success';
                 setTimeout(() => {
-                    const params = new URLSearchParams(window.location.search);
-                    window.location.href = params.get('next') || '/dashboard';
+                    window.location.href = (data.next || '/dashboard');
                 }, 1500);
             }
             else { status.textContent = '❌ ' + (data.detail || 'Erreur'); status.className = 'status-msg error'; }

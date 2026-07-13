@@ -11,12 +11,12 @@
 
 {% block content %}
 
-<div class="urgency-banner" id="urgencyBanner">
+<div class="urgency-banner" id="urgencyBanner" data-expires="{{ offer_expires }}">
     <div class="container">
         <div class="urgency-inner">
             <span class="urgency-badge">Offre limitée</span>
             <span>Starter à <strong>1€ le premier mois</strong> au lieu de 2,99€. Fin de l'offre : </span>
-            <span class="urgency-countdown" id="urgencyCountdown">02:14:38</span>
+            <span class="urgency-countdown" id="urgencyCountdown"></span>
         </div>
     </div>
 </div>
@@ -36,6 +36,17 @@
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Paiement sécurisé Stripe</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg> Annulation instantanée</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Zéro fichier conservé</span>
+        </div>
+        <div class="trust-logos" style="justify-content:center; margin-top:14px; margin-bottom:10px">
+            <span class="trust-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> SSL 256 bits</span>
+            <span class="trust-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg> Garantie 7 jours</span>
+            <span class="trust-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Support réponse < 24h</span>
+        </div>
+        <div class="card-icons" style="margin-bottom:30px">
+            <span class="card-icon">VISA</span>
+            <span class="card-icon">MASTERCARD</span>
+            <span class="card-icon">AMEX</span>
+            <span class="card-icon">Stripe</span>
         </div>
     </div>
 </section>
@@ -269,21 +280,29 @@ function switchBilling(period){
 
 function startUrgencyCountdown(){
     const el = document.getElementById('urgencyCountdown');
-    if(!el) return;
-    let total = 2*3600 + 14*60 + 38; // initial 02:14:38
-    function fmt(s){
-        const h=String(Math.floor(s/3600)).padStart(2,'0');
-        const m=String(Math.floor((s%3600)/60)).padStart(2,'0');
-        const sec=String(s%60).padStart(2,'0');
-        return `${h}:${m}:${sec}`;
+    const banner = document.getElementById('urgencyBanner');
+    if(!el || !banner) return;
+    let expires = parseInt(banner.dataset.expires || '0', 10) * 1000;
+    if(!expires){
+        const d = new Date();
+        expires = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()+1, 21, 59, 59);
     }
-    setInterval(()=>{
-        if(total>0) total--;
-        el.textContent = 'Termine dans '+fmt(total);
-    },1000);
+    function fmt(diff){
+        if(diff <= 0) return "L'offre expire bientôt";
+        const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+        const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+        const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+        return `Termine dans ${h}:${m}:${s}`;
+    }
+    function tick(){
+        const diff = expires - Date.now();
+        el.textContent = fmt(diff);
+        if(diff <= 0) clearInterval(timer);
+    }
+    tick();
+    const timer = setInterval(tick, 1000);
 }
 startUrgencyCountdown();
-
 const urlParams = new URLSearchParams(window.location.search);
 if(urlParams.get('plan') === 'starter'){
     const starterCard = document.querySelector('[data-plan="starter"]');
@@ -294,6 +313,11 @@ document.querySelectorAll('.checkout-btn').forEach(btn=>{
     btn.addEventListener('click', async function(){
         const plan = this.dataset.plan;
         const promo = this.dataset.promo || '';
+        {% if not user %}
+            openLeadModal(plan, currentBilling);
+            return;
+        {% endif %}
+        trackEvent('checkout_click', {plan, billing: currentBilling, promo});
         const body = new FormData();
         body.append('plan', plan);
         body.append('billing', currentBilling);
@@ -309,5 +333,71 @@ document.querySelectorAll('.checkout-btn').forEach(btn=>{
         }
     });
 });
+
+/* Analytics helper */
+async function trackEvent(event, properties={}){
+    try{
+        await fetch('/api/event', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({event, properties})});
+    }catch(_){}
+}
+trackEvent('pricing_view', {referrer: document.referrer});
+
+/* Exit-intent popup */
+let exitShown = false;
+document.addEventListener('mouseleave', e=>{
+    if(e.clientY < 10 && !exitShown){
+        exitShown = true;
+        openExitModal();
+    }
+});
+function openExitModal(){
+    const existing = document.getElementById('exitModal');
+    if(existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'exitModal';
+    modal.className = 'modal-overlay show';
+    modal.innerHTML = `
+        <div class="modal">
+            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <h3>⏳ Attendez ! Votre offre à 1€ expire bientôt</h3>
+            <p>Ne laissez pas filer le starter à 1€. Lancez votre première conversion en moins de 60 secondes.</p>
+            <a href="/signup?next=/pricing?plan=starter" class="btn btn-cta" onclick="trackEvent('exit_intent_cta_click',{})">Profiter de l'offre</a>
+            <p class="modal-note">Paiement sécurisé · Annulation à tout moment</p>
+        </div>`;
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+    document.body.appendChild(modal);
+    trackEvent('exit_intent_show', {});
+}
+
+/* Email capture modal for anonymous users */
+function openLeadModal(plan, billing){
+    const existing = document.getElementById('leadModal');
+    if(existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'leadModal';
+    modal.className = 'modal-overlay show';
+    modal.innerHTML = `
+        <div class="modal">
+            <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button>
+            <h3>🔒 Réservez votre offre à 1€</h3>
+            <p>Saisissez votre email pour continuer vers le paiement sécurisé. Votre offre est réservée pendant 15 minutes.</p>
+            <form onsubmit="return startLeadCheckout(event, '${plan}', '${billing}')">
+                <input type="email" name="email" placeholder="votre@email.com" required autocomplete="email">
+                <button type="submit" class="btn btn-cta">Continuer vers le paiement</button>
+            </form>
+            <p class="modal-note">Déjà membre ? <a href="/login?next=/pricing?plan=${plan}">Connectez-vous</a></p>
+        </div>`;
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.remove(); });
+    document.body.appendChild(modal);
+    trackEvent('lead_modal_show', {plan, billing});
+}
+function startLeadCheckout(e, plan, billing){
+    e.preventDefault();
+    const email = e.target.email.value.trim();
+    if(!email) return false;
+    trackEvent('lead_email_capture', {plan, billing});
+    window.location.href = '/signup?email=' + encodeURIComponent(email) + '&next=' + encodeURIComponent('/pricing?plan=' + plan);
+    return false;
+}
 </script>
 {% endblock %}

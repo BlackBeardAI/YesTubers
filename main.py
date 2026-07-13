@@ -2220,6 +2220,16 @@ class Cut(Base):
     status = Column(String(20), default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
 
+class Event(Base):
+    __tablename__ = "events"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = Column(String(64), index=True)
+    properties = Column(Text, default="{}")
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+    ip = Column(String(64))
+    user_agent = Column(String(512))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 Base.metadata.create_all(bind=engine)
 
 def get_db():
@@ -2537,12 +2547,18 @@ async def indexnow_submit(urls: list[str] = Form(...)):
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     i18n = translate_dict(request)
-    return HTMLResponse(_jinja_env.get_template("login.html").render(request=request, i18n=i18n, locale=i18n["_locale"]))
+    return HTMLResponse(_jinja_env.get_template("login.html").render(
+        request=request, i18n=i18n, locale=i18n["_locale"],
+        next_url=request.query_params.get("next", ""),
+        email=request.query_params.get("email", "")))
 
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_page(request: Request):
     i18n = translate_dict(request)
-    return HTMLResponse(_jinja_env.get_template("signup.html").render(request=request, i18n=i18n, locale=i18n["_locale"]))
+    return HTMLResponse(_jinja_env.get_template("signup.html").render(
+        request=request, i18n=i18n, locale=i18n["_locale"],
+        next_url=request.query_params.get("next", ""),
+        email=request.query_params.get("email", "")))
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request, db: Session = Depends(get_db)):
@@ -2565,7 +2581,7 @@ async def pricing(request: Request, db: Session = Depends(get_db)):
     i18n = translate_dict(request)
     return HTMLResponse(_jinja_env.get_template("pricing.html").render(
         request=request, user=user, stripe_pk=STRIPE_PK, stripe_enabled=STRIPE_ENABLED, i18n=i18n, locale=i18n["_locale"],
-        plans=PLANS,
+        plans=PLANS, offer_expires=_offer_expires_ts(),
     ))
 
 @app.get("/about", response_class=HTMLResponse)
@@ -4096,6 +4112,14 @@ for _lang in SUPPORTED_LOCALES:
 
 # ─── Routes Web ───────────────────────────────────────────────────────────────
 
+def _offer_expires_ts() -> int:
+    """Return Unix seconds for the current daily offer deadline (23:59:59 Europe/Paris)."""
+    from datetime import datetime, time as dt_time, timezone, timedelta
+    paris = timezone(timedelta(hours=2))  # CET/CEST handled approx via fixed +2h
+    now = datetime.now(paris)
+    deadline = datetime.combine(now.date(), dt_time(23, 59, 59), tzinfo=paris)
+    return int(deadline.timestamp())
+
 @app.get("/", response_class=HTMLResponse)
 @app.head("/", response_class=HTMLResponse)
 async def home(request: Request, db: Session = Depends(get_db)):
@@ -4103,7 +4127,8 @@ async def home(request: Request, db: Session = Depends(get_db)):
     i18n = translate_dict(request)
     total_conversions = get_total_conversions()
     response = HTMLResponse(_jinja_env.get_template("index.html").render(
-        request=request, user=user, stripe_pk=STRIPE_PK, i18n=i18n, locale=i18n["_locale"], total_conversions=total_conversions))
+        request=request, user=user, stripe_pk=STRIPE_PK, i18n=i18n, locale=i18n["_locale"],
+        total_conversions=total_conversions, offer_expires=_offer_expires_ts()))
     if request.query_params.get("lang"):
         response.set_cookie("locale", i18n["_locale"], max_age=365*24*3600)
     return response
@@ -4207,7 +4232,7 @@ async def api_signup(request: Request, email: str = Form(...), password: str = F
     token = generate_email_verification_token(user, db)
     send_verification_email(user, token)
 
-    response = JSONResponse({"ok": True, "message": "Compte créé. Vérifiez votre email pour débloquer toutes les fonctionnalités.", "email_verified": False, "referral_code": user.referral_code})
+    response = JSONResponse({"ok": True, "message": "Compte créé. Vérifiez votre email pour débloquer toutes les fonctionnalités.", "email_verified": False, "referral_code": user.referral_code, "next": request.query_params.get("next", "")})
     response.set_cookie("session", _sign_session(user.id), httponly=True, max_age=30*24*3600, samesite="lax", secure=True)
     response.delete_cookie("ref")
     return response
@@ -4657,6 +4682,30 @@ async def _get_starter_trial_coupon_id() -> str | None:
         print(f"[stripe coupon] could not create/retrieve: {e}")
         return None
 
+
+@app.post("/api/event")
+async def track_event(request: Request, db: Session = Depends(get_db)):
+    """Lightweight analytics endpoint for frontend conversion events."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    name = str(data.get("event", "") or "unknown")[:64]
+    if not name or name == "unknown":
+        raise HTTPException(400, "event required")
+    properties = json.dumps({k: str(v)[:128] for k, v in data.get("properties", {}).items()})[:2048]
+    user = get_user_from_session(request, db)
+    ip = request.client.host if request.client else None
+    event = Event(
+        name=name,
+        properties=properties,
+        user_id=user.id if user else None,
+        ip=ip,
+        user_agent=request.headers.get("user-agent"),
+    )
+    db.add(event)
+    db.commit()
+    return {"ok": True}
 
 @app.post("/api/stripe/create-checkout")
 async def stripe_checkout(

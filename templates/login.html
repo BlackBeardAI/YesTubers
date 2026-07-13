@@ -21,8 +21,9 @@
                 <p class="auth-sub">Accédez à vos crédits, vidéos et extraits.</p>
             </div>
             <form id="login-form">
+                {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}"/>{% endif %}
                 <label>Email</label>
-                <input type="email" name="email" required placeholder="vous@email.com" />
+                <input type="email" name="email" required placeholder="vous@email.com" value="{{ email }}" />
                 <label>Mot de passe</label>
                 <input type="password" name="password" required placeholder="••••••••" />
                 <div id="login-status" class="status-msg"></div>
@@ -44,9 +45,9 @@
             const r = await fetch('/api/auth/login', {method:'POST', body: form});
             const data = await r.json();
             if (r.ok) {
-                    const params = new URLSearchParams(window.location.search);
-                    window.location.href = params.get('next') || '/dashboard';
-                }
+                const params = new URLSearchParams(window.location.search);
+                window.location.href = params.get('next') || '/dashboard';
+            }
             else { status.textContent = '❌ ' + (data.detail || 'Erreur'); status.className = 'status-msg error'; }
         } catch(err) { status.textContent = '❌ Erreur réseau'; status.className = 'status-msg error'; }
     });

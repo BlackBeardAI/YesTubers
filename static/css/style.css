@@ -1032,3 +1032,94 @@ body {
 }
 .footer-trust span { display: inline-flex; align-items: center; gap: 5px; }
 .footer-trust svg { width: 14px; height: 14px; }
+
+/* Modal / exit intent */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,.55);
+    backdrop-filter: blur(4px);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    max-width: 460px;
+    width: 100%;
+    padding: 32px;
+    position: relative;
+    animation: modalIn .25s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+.modal h3 { font-size: 1.35rem; margin: 0 0 10px; }
+.modal p { color: var(--text-muted); margin: 0 0 20px; font-size: .96rem; }
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: var(--text-light);
+    cursor: pointer;
+}
+.modal input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: .95rem;
+    margin-bottom: 14px;
+    outline: none;
+}
+.modal input:focus { border-color: var(--primary); }
+.modal .btn-cta { width: 100%; justify-content: center; }
+.modal-note { font-size: .78rem; color: var(--text-light); margin-top: 12px; text-align: center; }
+
+.trust-logos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 28px;
+    margin-top: 24px;
+}
+.trust-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-weight: 600;
+    color: var(--text);
+    font-size: .9rem;
+    box-shadow: var(--shadow-sm);
+}
+.trust-logo svg {
+    width: 22px;
+    height: 22px;
+    color: var(--primary);
+}
+.card-icons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 10px;
+}
+.card-icon {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
